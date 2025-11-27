@@ -52,5 +52,149 @@
                 </div>
             </div>
         </div>
+
+        <div id="auth-page" class="page auth-page">
+            <div class="auth-card">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <div class="logo-icon" style="width: 3.5rem; height: 3.5rem; margin: 0 auto 1rem;">
+                        <svg fill="none" stroke="white" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                        </svg>
+                    </div>
+                    <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Pharmacy Management</h1>
+                    <p style="font-size: 0.875rem; color: #6b7280;">Sign in or create an account</p>
+                </div>
+
+                <div class="tab-list">
+                    <button class="tab active" onclick="switchAuthTab('signin')">Sign In</button>
+                    <button class="tab" onclick="switchAuthTab('signup')">Sign Up</button>
+                </div>
+
+                <div id="signin-content">
+                    <form onsubmit="handleSignIn(event)">
+                        <div class="input-group">
+                            <label>Email</label>
+                            <input type="email" id="signin-email" placeholder="your@email.com" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <input type="password" id="signin-password" placeholder="Enter password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+                    </form>
+
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #f0fdf4; border-radius: 0.5rem; font-size: 0.75rem;">
+                        <p><strong>Demo:</strong> admin@pharmacy.com / admin123</p>
+                        <p><strong>Doctor:</strong> doctor@clinic.com / doctor123</p>
+                        <p><strong>Patient:</strong> patient@email.com / patient123</p>
+                    </div>
+                </div>
+
+                <div id="signup-content" class="hidden">
+                    <form onsubmit="handleSignUp(event)">
+                        <div class="input-group">
+                            <label>Full Name</label>
+                            <input type="text" id="signup-name" placeholder="John Doe" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Email</label>
+                            <input type="email" id="signup-email" placeholder="your@email.com" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <input type="password" id="signup-password" placeholder="Create password" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Role</label>
+                            <select id="signup-role" onchange="toggleNationalId()">
+                                <option value="patient">Patient</option>
+                                <option value="doctor">Doctor</option>
+                                <option value="pharmacist">Pharmacist/Admin</option>
+                            </select>
+                        </div>
+                        <div id="national-id-group" class="input-group">
+                            <label>National ID (Optional)</label>
+                            <input type="text" id="signup-national-id" placeholder="Enter National ID">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="pharmacist-dashboard" class="page dashboard">
+            <div class="dashboard-header">
+                <div class="container flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="logo-icon" style="width: 2rem; height: 2rem;">
+                            <svg fill="none" stroke="white" viewBox="0 0 24 24" style="width: 1rem; height: 1rem;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 style="font-weight: 600;">Pharmacy Admin</h2>
+                            <p style="font-size: 0.75rem; color: #6b7280;">Welcome, <span id="pharmacist-name"></span></p>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+                </div>
+            </div>
+            <div class="dashboard-content container">
+                <div class="flex items-center justify-between mb-4">
+                    <h1 style="font-size: 1.875rem; font-weight: 700;">Medicine Inventory</h1>
+                    <button class="btn btn-primary" onclick="showAddMedicine()">Add Medicine</button>
+                </div>
+
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Batch</th>
+                                <th>Expiry</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="medicines-table"></tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">User Management</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>National ID</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table"></tbody>
+                    </table>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div class="card">
+                        <h3 style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">Total Revenue</h3>
+                        <p style="font-size: 2rem; font-weight: 700;" id="total-revenue">$0.00</p>
+                        <p style="font-size: 0.75rem; color: #6b7280;">From <span id="total-orders">0</span> orders</p>
+                    </div>
+                    <div class="card">
+                        <h3 style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">Total Medicines</h3>
+                        <p style="font-size: 2rem; font-weight: 700;" id="total-medicines">0</p>
+                        <p style="font-size: 0.75rem; color: #6b7280;">In inventory</p>
+                    </div>
+                    <div class="card">
+                        <h3 style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">Low Stock Items</h3>
+                        <p style="font-size: 2rem; font-weight: 700;" id="low-stock-count">0</p>
+                        <p style="font-size: 0.75rem; color: #6b7280;">Below 10 units</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </body>
 </html>
