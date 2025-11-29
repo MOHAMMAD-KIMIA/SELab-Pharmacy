@@ -363,5 +363,53 @@
                 </div>
             </div>
         </div>
+
+        <!-- Medicine Modal -->
+        <div id="medicine-modal" class="modal">
+            <div class="modal-content">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 style="font-size: 1.25rem; font-weight: 700;" id="modal-title">Add Medicine</h2>
+                    <button onclick="closeMedicineModal()" style="border: none; background: none; cursor: pointer; font-size: 1.5rem;">&times;</button>
+                </div>
+
+                <form onsubmit="saveMedicine(event)">
+                    <input type="hidden" id="medicine-id">
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Medicine Name</label>
+                            <input type="text" id="medicine-name" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Category</label>
+                            <input type="text" id="medicine-category" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Manufacturer</label>
+                            <input type="text" id="medicine-manufacturer" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Batch Number</label>
+                            <input type="text" id="medicine-batch" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Expiry Date</label>
+                            <input type="date" id="medicine-expiry" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Price ($)</label>
+                            <input type="number" step="0.01" id="medicine-price" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Quantity</label>
+                            <input type="number" id="medicine-quantity" required>
+                        </div>
+                    </div>
+                    <div class="flex gap-2" style="margin-top: 1rem;">
+                        <button type="submit" class="btn btn-primary">Save Medicine</button>
+                        <button type="button" onclick="closeMedicineModal()" class="btn btn-outline">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </body>
 </html>
