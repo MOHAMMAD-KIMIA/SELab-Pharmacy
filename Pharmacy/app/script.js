@@ -576,3 +576,120 @@ function placeOrder() {
             totalAmount += stockMed.price * prescribedMed.quantity;
         }
     });
+    
+   if (!selectedMedicines.length) {
+        alert('Please select at least one medicine to place an order.');
+        return;
+    }
+
+    if (!canPlaceOrder) return;
+
+    selectedMedicines.forEach(med => {
+        const medicine = medicinesInStock.find(m => m.id === med.medicineId);
+        if (medicine) medicine.quantity -= med.quantity;
+    });
+    localStorage.setItem('medicines', JSON.stringify(medicinesInStock));
+
+    const order = {
+        id: generateId(),
+        prescriptionId: currentPrescription.id,
+        prescriptionNumber: currentPrescription.prescriptionNumber,
+        patientId: currentUser.email,
+        patientName: currentUser.name,
+        totalAmount,
+        medicines: selectedMedicines, // Only selected medicines go into the order
+        createdAt: new Date().toISOString(),
+        status: 'completed'
+    };
+
+    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+    orders.push(order);
+    localStorage.setItem('orders', JSON.stringify(orders));
+
+    alert(`Order placed successfully for $${totalAmount.toFixed(2)}!`);
+    
+    document.getElementById('prescription-number').value = '';
+    document.getElementById('prescription-details').classList.add('hidden');
+    currentPrescription = null;
+    loadOrderHistory();
+
+    if (currentUser && currentUser.role === 'pharmacist') loadPharmacistDashboard();
+}
+
+function loadPrescriptionHistory() {
+    const prescriptions = JSON.parse(localStorage.getItem('prescriptions') || '[]').filter(p => p.patientId === currentUser.email);
+    const container = document.getElementById('prescription-history-list');
+
+    if (prescriptions.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 2rem;">No prescriptions found</p>';
+        return;
+    }
+
+    container.innerHTML = prescriptions.map(prescription => `
+        <div class="card" style="margin-bottom: 1rem;">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 style="font-weight: 700;">${prescription.prescriptionNumber}</h3>
+                    <p style="font-size: 0.875rem; color: #6b7280;">Dr. ${prescription.doctorName} • ${formatDate(prescription.createdAt)}</p>
+                </div>
+                <span class="badge badge-blue">${prescription.status}</span>
+            </div>
+            ${prescription.medicines.map(med => `
+                <div style="padding: 0.5rem; background: #f9fafb; border-radius: 0.5rem; margin-bottom: 0.5rem;">
+                    <div>${med.name}</div>
+                    <div style="font-size: 0.75rem; color: #6b7280;">${med.dosage} - ${med.duration} - Qty: ${med.quantity}</div>
+                </div>
+            `).join('')}
+        </div>
+    `).join('');
+}
+
+function loadOrderHistory() {
+    const orders = JSON.parse(localStorage.getItem('orders') || '[]').filter(o => o.patientId === currentUser.email);
+    const container = document.getElementById('order-history-list');
+
+    if (orders.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 2rem;">No orders found</p>';
+        return;
+    }
+
+    container.innerHTML = orders.map(order => `
+        <div class="card" style="margin-bottom: 1rem;">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 style="font-weight: 700;">Order #${order.id.slice(0, 8)}</h3>
+                    <p style="font-size: 0.875rem; color: #6b7280;">${formatDate(order.createdAt)}</p>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 1.125rem; font-weight: 700;">$${order.totalAmount.toFixed(2)}</div>
+                    <span class="badge badge-green">${order.status}</span>
+                </div>
+            </div>
+            ${order.medicines.map(med => `
+                <div style="display: flex; justify-between; padding: 0.5rem; background: #f9fafb; border-radius: 0.5rem; margin-bottom: 0.5rem;">
+                    <span>${med.name}</span>
+                    <span style="font-size: 0.875rem; color: #6b7280;">Qty: ${med.quantity}</span>
+                </div>
+            `).join('')}
+        </div>
+    `).join('');
+}
+
+const storedUser = localStorage.getItem('currentUser');
+if (storedUser) {
+    currentUser = JSON.parse(storedUser);
+    switch(currentUser.role) {
+        case 'pharmacist':
+            showPage('pharmacist-dashboard');
+            loadPharmacistDashboard();
+            break;
+        case 'doctor':
+            showPage('doctor-dashboard');
+            loadDoctorDashboard();
+            break;
+        case 'patient':
+            showPage('patient-dashboard');
+            loadPatientDashboard();
+            break;
+    }
+}
