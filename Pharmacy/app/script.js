@@ -459,3 +459,120 @@ function createPrescription(event) {
     updatePrescribedMedicinesList();
 }
 
+// Patient Dashboard
+function loadPatientDashboard() {
+    document.getElementById('patient-name').textContent = currentUser.name;
+    loadPrescriptionHistory();
+    loadOrderHistory();
+}
+
+function searchPrescription(event) {
+    event.preventDefault();
+    
+    const prescriptionNumber = document.getElementById('prescription-number').value;
+    const prescriptions = JSON.parse(localStorage.getItem('prescriptions') || '[]');
+    const prescription = prescriptions.find(p => p.prescriptionNumber === prescriptionNumber);
+
+    if (!prescription) {
+        alert('Prescription not found');
+        document.getElementById('prescription-details').classList.add('hidden');
+        return;
+    }
+
+    if (prescription.patientId !== currentUser.email) {
+        alert('This prescription does not belong to you');
+        document.getElementById('prescription-details').classList.add('hidden');
+        return;
+    }
+
+    currentPrescription = prescription;
+    displayPrescription(prescription);
+}
+
+function updateOrderTotal() {
+    if (!currentPrescription) return;
+
+    const checkboxes = document.querySelectorAll('#prescription-medicines input[type="checkbox"]');
+    let newTotal = 0;
+    const medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
+    
+    checkboxes.forEach(checkbox => {
+        const index = parseInt(checkbox.dataset.index);
+        const prescribedMed = currentPrescription.medicines[index];
+        const medicine = medicines.find(m => m.id === prescribedMed.medicineId);
+        
+        if (checkbox.checked) {
+            if (medicine) {
+                newTotal += medicine.price * prescribedMed.quantity;
+            }
+        }
+    });
+
+    document.getElementById('order-total-amount').textContent = `$${newTotal.toFixed(2)}`;
+}
+
+function displayPrescription(prescription) {
+    const medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
+    
+    document.getElementById('doctor-name-display').textContent = prescription.doctorName;
+    document.getElementById('prescription-date').textContent = formatDate(prescription.createdAt);
+    document.getElementById('prescription-num-display').textContent = prescription.prescriptionNumber;
+
+    const tbody = document.getElementById('prescription-medicines');
+    
+    const rows = prescription.medicines.map((med, index) => {
+        const medicine = medicines.find(m => m.id === med.medicineId);
+        const price = medicine ? medicine.price : 0;
+        const total = price * med.quantity;
+        
+        med.isChecked = true;
+
+        return `
+            <tr data-index="${index}" data-price="${price}" data-quantity="${med.quantity}">
+                <td><input type="checkbox" checked onchange="updateOrderTotal()" data-index="${index}"></td>
+                <td>${med.name}</td>
+                <td>${med.dosage}</td>
+                <td>${med.duration}</td>
+                <td>${med.quantity}</td>
+                <td>$${price.toFixed(2)}</td>
+                <td class="item-total">$${total.toFixed(2)}</td>
+            </tr>
+        `;
+    }).join('');
+
+    tbody.innerHTML = rows + `
+        <tr style="font-weight: 700;">
+            <td colspan="6">Total Amount</td>
+            <td id="order-total-amount">$0.00</td>
+        </tr>
+    `;
+
+    document.getElementById('prescription-details').classList.remove('hidden');
+    updateOrderTotal();
+}
+
+function placeOrder() {
+    if (!currentPrescription) return;
+
+    const checkboxes = document.querySelectorAll('#prescription-medicines input[type="checkbox"]');
+    const selectedMedicines = [];
+    const medicinesInStock = JSON.parse(localStorage.getItem('medicines') || '[]');
+    let totalAmount = 0;
+    let canPlaceOrder = true;
+
+    checkboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            const index = parseInt(checkbox.dataset.index);
+            const prescribedMed = currentPrescription.medicines[index];
+            const stockMed = medicinesInStock.find(m => m.id === prescribedMed.medicineId);
+            
+            if (!stockMed || stockMed.quantity < prescribedMed.quantity) {
+                alert(`Insufficient stock for ${prescribedMed.name}`);
+                canPlaceOrder = false;
+                return; 
+            }
+
+            selectedMedicines.push(prescribedMed);
+            totalAmount += stockMed.price * prescribedMed.quantity;
+        }
+    });
