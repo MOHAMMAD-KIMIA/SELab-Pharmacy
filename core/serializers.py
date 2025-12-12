@@ -96,3 +96,23 @@ class PrescriptionSerializer(serializers.ModelSerializer):
             )
 
         return prescription
+    
+class OrderItemSerializer(serializers.ModelSerializer):
+    medicine_name = serializers.CharField(source='medicine.name', read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = ['medicine', 'medicine_name', 'quantity', 'unit_price']
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
+    patient_name = serializers.CharField(source='patient.username', read_only=True)
+
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'patient', 'patient_name',
+            'prescription', 'total_amount',
+            'created_at', 'status', 'items'
+        ]
