@@ -82,7 +82,6 @@ async function handleSignIn(event) {
             return;
         }
 
-        // ذخیره اطلاعات کاربر (session)
         currentUser = data.user;
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
@@ -113,7 +112,7 @@ async function handleSignUp(event) {
     const role = document.getElementById('signup-role').value;
     const nationalId = document.getElementById('signup-national-id').value;
 
-    const username = email.split('@')[0];  // چون Django username نیاز دارد
+    const username = email.split('@')[0]; 
 
     const data = {
         username: username,
@@ -136,7 +135,6 @@ async function handleSignUp(event) {
 
         if (response.ok) {
             alert("Account created successfully!");
-            // بعد از ثبت نام → بفرست صفحه Sign-in
             switchAuthTab('signin');
         } else {
             alert("Error: " + JSON.stringify(result));
@@ -259,7 +257,7 @@ async function saveMedicine(event) {
 
     const data = {
         name: document.getElementById('medicine-name').value,
-        category: 1,  // فعلا دسته‌بندی ثابت، بعداً API دسته‌ها را می‌سازیم
+        category: 1, 
         manufacturer: document.getElementById('medicine-manufacturer').value,
         batch_number: document.getElementById('medicine-batch').value,
         expiry_date: document.getElementById('medicine-expiry').value,
@@ -626,7 +624,7 @@ function placeOrder() {
         patientId: currentUser.email,
         patientName: currentUser.name,
         totalAmount,
-        medicines: selectedMedicines, // Only selected medicines go into the order
+        medicines: selectedMedicines, 
         createdAt: new Date().toISOString(),
         status: 'completed'
     };
