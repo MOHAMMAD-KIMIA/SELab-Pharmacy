@@ -10,11 +10,18 @@ from .models import Medicine
 from .serializers import MedicineSerializer
 from rest_framework import viewsets
 from .models import Prescription
-from .serializers import PrescriptionSerializer
+from .serializers import (
+    SignupSerializer,
+    LoginSerializer,
+    MedicineSerializer,
+    PrescriptionSerializer,
+    OrderSerializer,   # 👈 این خط
+)
 from django.utils.crypto import get_random_string
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 from .models import Order, OrderItem, Alert, Medicine
+
 @api_view(['GET'])
 def patient_orders(request, patient_id):
     orders = Order.objects.filter(patient_id=patient_id).order_by('-created_at')
