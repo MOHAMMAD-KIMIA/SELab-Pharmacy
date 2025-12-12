@@ -654,32 +654,31 @@ function placeOrder() {
     if (currentUser && currentUser.role === 'pharmacist') loadPharmacistDashboard();
 }
 
-function loadPrescriptionHistory() {
-    const prescriptions = JSON.parse(localStorage.getItem('prescriptions') || '[]').filter(p => p.patientId === currentUser.email);
+async function loadPrescriptionHistory() {
+    const res = await fetch(
+        `http://127.0.0.1:8000/api/patients/${currentUser.id}/prescriptions/`
+    );
+
+    const prescriptions = await res.json();
     const container = document.getElementById('prescription-history-list');
 
-    if (prescriptions.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 2rem;">No prescriptions found</p>';
+    if (!prescriptions.length) {
+        container.innerHTML = "<p>No prescriptions found</p>";
         return;
     }
 
-    container.innerHTML = prescriptions.map(prescription => `
-        <div class="card" style="margin-bottom: 1rem;">
-            <div class="flex items-center justify-between mb-4">
+    container.innerHTML = prescriptions.map(p => `
+        <div class="card">
+            <h3>${p.prescription_number}</h3>
+            <p>Doctor: ${p.doctor_name}</p>
+            <p>Date: ${new Date(p.created_at).toLocaleDateString()}</p>
+            ${p.items.map(i => `
                 <div>
-                    <h3 style="font-weight: 700;">${prescription.prescriptionNumber}</h3>
-                    <p style="font-size: 0.875rem; color: #6b7280;">Dr. ${prescription.doctorName} • ${formatDate(prescription.createdAt)}</p>
+                    ${i.medicine_name} - ${i.dosage} - Qty: ${i.quantity}
                 </div>
-                <span class="badge badge-blue">${prescription.status}</span>
-            </div>
-            ${prescription.medicines.map(med => `
-                <div style="padding: 0.5rem; background: #f9fafb; border-radius: 0.5rem; margin-bottom: 0.5rem;">
-                    <div>${med.name}</div>
-                    <div style="font-size: 0.75rem; color: #6b7280;">${med.dosage} - ${med.duration} - Qty: ${med.quantity}</div>
-                </div>
-            `).join('')}
+            `).join("")}
         </div>
-    `).join('');
+    `).join("");
 }
 
 function loadOrderHistory() {
