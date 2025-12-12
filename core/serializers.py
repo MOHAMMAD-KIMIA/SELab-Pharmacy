@@ -59,3 +59,40 @@ class MedicineSerializer(serializers.ModelSerializer):
             'manufacturer', 'batch_number', 'expiry_date',
             'price', 'stock'
         ]
+
+class PrescriptionItemSerializer(serializers.ModelSerializer):
+    medicine_name = serializers.CharField(source='medicine.name', read_only=True)
+
+    class Meta:
+        model = PrescriptionItem
+        fields = [
+            'id', 'medicine', 'medicine_name',
+            'dosage', 'duration', 'quantity'
+        ]
+
+class PrescriptionSerializer(serializers.ModelSerializer):
+    items = PrescriptionItemSerializer(many=True)
+    doctor_name = serializers.CharField(source='doctor.username', read_only=True)
+    patient_name = serializers.CharField(source='patient.username', read_only=True)
+
+    class Meta:
+        model = Prescription
+        fields = [
+            'id', 'prescription_number',
+            'doctor', 'doctor_name',
+            'patient', 'patient_name',
+            'created_at', 'status',
+            'items'
+        ]
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        prescription = Prescription.objects.create(**validated_data)
+
+        for item in items_data:
+            PrescriptionItem.objects.create(
+                prescription=prescription,
+                **item
+            )
+
+        return prescription
