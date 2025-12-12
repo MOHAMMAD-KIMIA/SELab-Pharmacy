@@ -57,78 +57,93 @@ function toggleNationalId() {
 }
 
 // Authentication
-function handleSignIn(event) {
+async function handleSignIn(event) {
     event.preventDefault();
-    
+
     const email = document.getElementById('signin-email').value;
     const password = document.getElementById('signin-password').value;
 
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const user = users.find(u => u.email === email && u.password === password);
+    const username = email.split('@')[0]; 
 
-    if (user) {
-        currentUser = user;
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        alert('Sign in successful!');
-        
-        switch(user.role) {
-            case 'pharmacist':
-                showPage('pharmacist-dashboard');
-                loadPharmacistDashboard();
-                break;
-            case 'doctor':
-                showPage('doctor-dashboard');
-                loadDoctorDashboard();
-                break;
-            case 'patient':
-                showPage('patient-dashboard');
-                loadPatientDashboard();
-                break;
+    try {
+        const response = await fetch("http://127.0.0.1:8000/api/login/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.error || "Login failed");
+            return;
         }
-    } else {
-        alert('Invalid email or password');
+
+        // ذخیره اطلاعات کاربر (session)
+        currentUser = data.user;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+        alert("Login successful!");
+
+        if (currentUser.role === 'pharmacist') {
+            showPage('pharmacist-dashboard');
+            loadPharmacistDashboard();
+        } else if (currentUser.role === 'doctor') {
+            showPage('doctor-dashboard');
+            loadDoctorDashboard();
+        } else if (currentUser.role === 'patient') {
+            showPage('patient-dashboard');
+            loadPatientDashboard();
+        }
+
+    } catch (error) {
+        alert("Network error");
     }
 }
 
-function handleSignUp(event) {
+async function handleSignUp(event) {
     event.preventDefault();
-    
+
     const name = document.getElementById('signup-name').value;
     const email = document.getElementById('signup-email').value;
     const password = document.getElementById('signup-password').value;
     const role = document.getElementById('signup-role').value;
     const nationalId = document.getElementById('signup-national-id').value;
 
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const username = email.split('@')[0];  // چون Django username نیاز دارد
 
-    if (users.find(u => u.email === email)) {
-        alert('User already exists');
-        return;
-    }
+    const data = {
+        username: username,
+        email: email,
+        password: password,
+        role: role,
+        national_id: nationalId
+    };
 
-    const newUser = { email, password, name, role, nationalId: nationalId || null };
+    try {
+        const response = await fetch("http://127.0.0.1:8000/api/signup/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
 
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-    
-    currentUser = newUser;
-    localStorage.setItem('currentUser', JSON.stringify(newUser));
+        const result = await response.json();
 
-    alert('Account created successfully!');
+        if (response.ok) {
+            alert("Account created successfully!");
+            // بعد از ثبت نام → بفرست صفحه Sign-in
+            switchAuthTab('signin');
+        } else {
+            alert("Error: " + JSON.stringify(result));
+        }
 
-    switch(newUser.role) {
-        case 'pharmacist':
-            showPage('pharmacist-dashboard');
-            loadPharmacistDashboard();
-            break;
-        case 'doctor':
-            showPage('doctor-dashboard');
-            loadDoctorDashboard();
-            break;
-        case 'patient':
-            showPage('patient-dashboard');
-            loadPatientDashboard();
-            break;
+    } catch (error) {
+        alert("Network Error");
     }
 }
 
@@ -161,29 +176,36 @@ function loadPharmacistDashboard() {
     loadStats();
 }
 
-function loadMedicines() {
-    const medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
-    const tbody = document.getElementById('medicines-table');
-    
-    if (medicines.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #6b7280;">No medicines found</td></tr>';
-        return;
-    }
+async function loadMedicines() {
+    try {
+        const response = await fetch("http://127.0.0.1:8000/api/medicines/");
+        const medicines = await response.json();
 
-    tbody.innerHTML = medicines.map(med => `
-        <tr>
-            <td>${med.name}</td>
-            <td>${med.category}</td>
-            <td>${med.batchNumber}</td>
-            <td>${formatDate(med.expiryDate)}</td>
-            <td>$${med.price.toFixed(2)}</td>
-            <td><span class="badge ${med.quantity < 10 ? 'badge-red' : 'badge-blue'}">${med.quantity}</span></td>
-            <td>
-                <button onclick="editMedicine('${med.id}')" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Edit</button>
-                <button onclick="deleteMedicine('${med.id}')" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #ef4444; color: white;">Delete</button>
-            </td>
-        </tr>
-    `).join('');
+        const tbody = document.getElementById('medicines-table');
+        
+        if (!medicines.length) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem">No medicines found</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = medicines.map(med => `
+            <tr>
+                <td>${med.name}</td>
+                <td>${med.category_name}</td>
+                <td>${med.batch_number}</td>
+                <td>${new Date(med.expiry_date).toLocaleDateString()}</td>
+                <td>$${med.price}</td>
+                <td>${med.stock}</td>
+                <td>
+                    <button onclick="editMedicine(${med.id})" class="btn" style="font-size:12px">Edit</button>
+                    <button onclick="deleteMedicine(${med.id})" class="btn" style="background:#ef4444; color:white; font-size:12px">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (err) {
+        alert("Error loading medicines");
+    }
 }
 
 function loadUsers() {
@@ -230,63 +252,74 @@ function closeMedicineModal() {
     document.getElementById('medicine-modal').classList.remove('active');
 }
 
-function saveMedicine(event) {
+async function saveMedicine(event) {
     event.preventDefault();
-    
+
     const id = document.getElementById('medicine-id').value;
-    const medicine = {
-        id: id || generateId(),
+
+    const data = {
         name: document.getElementById('medicine-name').value,
-        category: document.getElementById('medicine-category').value,
+        category: 1,  // فعلا دسته‌بندی ثابت، بعداً API دسته‌ها را می‌سازیم
         manufacturer: document.getElementById('medicine-manufacturer').value,
-        batchNumber: document.getElementById('medicine-batch').value,
-        expiryDate: document.getElementById('medicine-expiry').value,
-        price: parseFloat(document.getElementById('medicine-price').value),
-        quantity: parseInt(document.getElementById('medicine-quantity').value)
+        batch_number: document.getElementById('medicine-batch').value,
+        expiry_date: document.getElementById('medicine-expiry').value,
+        price: document.getElementById('medicine-price').value,
+        stock: document.getElementById('medicine-quantity').value
     };
 
-    let medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
-    
+    let url = "http://127.0.0.1:8000/api/medicines/";
+    let method = "POST";
+
     if (id) {
-        medicines = medicines.map(m => m.id === id ? medicine : m);
-        alert('Medicine updated successfully!');
-    } else {
-        medicines.push(medicine);
-        alert('Medicine added successfully!');
+        url = `http://127.0.0.1:8000/api/medicines/${id}/`;
+        method = "PUT";
     }
 
-    localStorage.setItem('medicines', JSON.stringify(medicines));
-    closeMedicineModal();
-    loadMedicines();
-    loadStats();
-}
+    const response = await fetch(url, {
+        method: method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    });
 
-function editMedicine(id) {
-    const medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
-    const medicine = medicines.find(m => m.id === id);
-    
-    if (medicine) {
-        document.getElementById('modal-title').textContent = 'Edit Medicine';
-        document.getElementById('medicine-id').value = medicine.id;
-        document.getElementById('medicine-name').value = medicine.name;
-        document.getElementById('medicine-category').value = medicine.category;
-        document.getElementById('medicine-manufacturer').value = medicine.manufacturer;
-        document.getElementById('medicine-batch').value = medicine.batchNumber;
-        document.getElementById('medicine-expiry').value = medicine.expiryDate;
-        document.getElementById('medicine-price').value = medicine.price;
-        document.getElementById('medicine-quantity').value = medicine.quantity;
-        document.getElementById('medicine-modal').classList.add('active');
-    }
-}
-
-function deleteMedicine(id) {
-    if (confirm('Are you sure you want to delete this medicine?')) {
-        let medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
-        medicines = medicines.filter(m => m.id !== id);
-        localStorage.setItem('medicines', JSON.stringify(medicines));
+    if (response.ok) {
+        alert("Saved successfully!");
+        closeMedicineModal();
         loadMedicines();
-        loadStats();
-        alert('Medicine deleted successfully!');
+    } else {
+        alert("Save failed!");
+    }
+}
+
+async function editMedicine(id) {
+    const res = await fetch(`http://127.0.0.1:8000/api/medicines/${id}/`);
+    const med = await res.json();
+
+    document.getElementById('medicine-id').value = med.id;
+    document.getElementById('medicine-name').value = med.name;
+    document.getElementById('medicine-category').value = med.category_name;
+    document.getElementById('medicine-manufacturer').value = med.manufacturer;
+    document.getElementById('medicine-batch').value = med.batch_number;
+    document.getElementById('medicine-expiry').value = med.expiry_date;
+    document.getElementById('medicine-price').value = med.price;
+    document.getElementById('medicine-quantity').value = med.stock;
+
+    document.getElementById('modal-title').textContent = "Edit Medicine";
+    document.getElementById('medicine-modal').classList.add('active');
+}
+
+
+async function deleteMedicine(id) {
+    if (!confirm("Are you sure?")) return;
+
+    const response = await fetch(`http://127.0.0.1:8000/api/medicines/${id}/`, {
+        method: "DELETE"
+    });
+
+    if (response.ok) {
+        alert("Deleted!");
+        loadMedicines();
+    } else {
+        alert("Delete failed!");
     }
 }
 
