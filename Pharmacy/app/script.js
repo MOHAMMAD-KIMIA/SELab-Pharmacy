@@ -589,69 +589,49 @@ function displayPrescription(prescription) {
     updateOrderTotal();
 }
 
-function placeOrder() {
-    if (!currentPrescription) return;
-
-    const checkboxes = document.querySelectorAll('#prescription-medicines input[type="checkbox"]');
-    const selectedMedicines = [];
-    const medicinesInStock = JSON.parse(localStorage.getItem('medicines') || '[]');
-    let totalAmount = 0;
-    let canPlaceOrder = true;
-
-    checkboxes.forEach(checkbox => {
-        if (checkbox.checked) {
-            const index = parseInt(checkbox.dataset.index);
-            const prescribedMed = currentPrescription.medicines[index];
-            const stockMed = medicinesInStock.find(m => m.id === prescribedMed.medicineId);
-            
-            if (!stockMed || stockMed.quantity < prescribedMed.quantity) {
-                alert(`Insufficient stock for ${prescribedMed.name}`);
-                canPlaceOrder = false;
-                return; 
-            }
-
-            selectedMedicines.push(prescribedMed);
-            totalAmount += stockMed.price * prescribedMed.quantity;
-        }
-    });
-    
-   if (!selectedMedicines.length) {
-        alert('Please select at least one medicine to place an order.');
+async function placeOrder() {
+    if (!currentPrescription) {
+        alert("No prescription selected");
         return;
     }
 
-    if (!canPlaceOrder) return;
+    try {
+        const response = await fetch(
+            "http://127.0.0.1:8000/api/orders/create/",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    prescription_id: currentPrescription.id,
+                    patient_id: currentUser.id
+                })
+            }
+        );
 
-    selectedMedicines.forEach(med => {
-        const medicine = medicinesInStock.find(m => m.id === med.medicineId);
-        if (medicine) medicine.quantity -= med.quantity;
-    });
-    localStorage.setItem('medicines', JSON.stringify(medicinesInStock));
+        const data = await response.json();
 
-    const order = {
-        id: generateId(),
-        prescriptionId: currentPrescription.id,
-        prescriptionNumber: currentPrescription.prescriptionNumber,
-        patientId: currentUser.email,
-        patientName: currentUser.name,
-        totalAmount,
-        medicines: selectedMedicines, 
-        createdAt: new Date().toISOString(),
-        status: 'completed'
-    };
+        if (!response.ok) {
+            alert(data.error || "Failed to place order");
+            return;
+        }
 
-    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-    orders.push(order);
-    localStorage.setItem('orders', JSON.stringify(orders));
+        alert("Order placed successfully!");
 
-    alert(`Order placed successfully for $${totalAmount.toFixed(2)}!`);
-    
-    document.getElementById('prescription-number').value = '';
-    document.getElementById('prescription-details').classList.add('hidden');
-    currentPrescription = null;
-    loadOrderHistory();
+        document.getElementById('prescription-number').value = '';
+        document.getElementById('prescription-details').classList.add('hidden');
+        currentPrescription = null;
 
-    if (currentUser && currentUser.role === 'pharmacist') loadPharmacistDashboard();
+        loadOrderHistory();
+
+        if (currentUser && currentUser.role === 'pharmacist') {
+            loadPharmacistDashboard();
+        }
+
+    } catch (error) {
+        alert("Network error while placing order");
+    }
 }
 
 async function loadPrescriptionHistory() {
