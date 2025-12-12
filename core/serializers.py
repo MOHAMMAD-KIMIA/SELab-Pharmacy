@@ -21,11 +21,21 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class SignupSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField(write_only=True)
+    username = serializers.CharField(max_length=150)
     email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
     role = serializers.CharField()
-    national_id = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    national_id = serializers.CharField()
+
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Username already exists")
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Email already exists")
+        return value
 
     def create(self, validated_data):
         user = User.objects.create_user(
@@ -37,12 +47,10 @@ class SignupSerializer(serializers.Serializer):
         Profile.objects.create(
             user=user,
             role=validated_data["role"],
-            national_id=validated_data.get("national_id", None)
+            national_id=validated_data["national_id"]
         )
 
         return user
-
-
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
