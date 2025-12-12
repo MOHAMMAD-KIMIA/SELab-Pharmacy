@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Profile, Medicine, MedicineCategory, Prescription, PrescriptionItem, Order, OrderItem
+from django.utils.crypto import get_random_string
 
 
 
@@ -91,6 +92,8 @@ class PrescriptionItemSerializer(serializers.ModelSerializer):
             'dosage', 'duration', 'quantity'
         ]
 
+def generate_prescription_number():
+    return "RX-" + get_random_string(8).upper()
 class PrescriptionSerializer(serializers.ModelSerializer):
     items = PrescriptionItemSerializer(many=True)
 
