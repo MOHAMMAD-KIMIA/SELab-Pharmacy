@@ -679,18 +679,50 @@ async function loadPrescriptionHistory() {
         return;
     }
 
-    container.innerHTML = prescriptions.map(p => `
-        <div class="card">
-            <h3>${p.prescription_number}</h3>
-            <p>Doctor: ${p.doctor_name}</p>
-            <p>Date: ${new Date(p.created_at).toLocaleDateString()}</p>
-            ${p.items.map(i => `
-                <div>
-                    ${i.medicine_name} - ${i.dosage} - Qty: ${i.quantity}
+    container.innerHTML = prescriptions.map(p => {
+        const isCompleted = p.status === 'completed';
+
+        return `
+            <div class="card" style="
+                opacity: ${isCompleted ? 0.6 : 1};
+                border-left: 5px solid ${isCompleted ? '#9ca3af' : '#22c55e'};
+            ">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3>${p.prescription_number}</h3>
+                    <span style="
+                        font-size: 0.75rem;
+                        padding: 0.25rem 0.5rem;
+                        border-radius: 9999px;
+                        background: ${isCompleted ? '#e5e7eb' : '#dcfce7'};
+                        color: ${isCompleted ? '#374151' : '#166534'};
+                    ">
+                        ${isCompleted ? 'Completed' : 'Active'}
+                    </span>
                 </div>
-            `).join("")}
-        </div>
-    `).join("");
+
+                <p><strong>Doctor:</strong> ${p.doctor_name}</p>
+                <p><strong>Date:</strong> ${new Date(p.created_at).toLocaleDateString()}</p>
+
+                <div style="margin-top:0.5rem;">
+                    ${p.items.map(i => `
+                        <div style="font-size:0.875rem;">
+                            • ${i.medicine_name} — ${i.dosage} — Qty: ${i.quantity}
+                        </div>
+                    `).join("")}
+                </div>
+
+                <div style="margin-top:1rem; text-align:right;">
+                    <button
+                        class="btn btn-primary"
+                        ${isCompleted ? 'disabled style="background:#9ca3af; cursor:not-allowed;"' : ''}
+                        onclick="placeOrderFromHistory(${p.id})"
+                    >
+                        ${isCompleted ? 'Completed' : 'Place Order'}
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join("");
 }
 
 function loadOrderHistory() {
