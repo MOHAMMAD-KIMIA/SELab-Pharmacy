@@ -15,7 +15,7 @@ from .serializers import (
     LoginSerializer,
     MedicineSerializer,
     PrescriptionSerializer,
-    OrderSerializer,   # 👈 این خط
+    OrderSerializer,  
 )
 from django.utils.crypto import get_random_string
 from django.contrib.auth.models import User
