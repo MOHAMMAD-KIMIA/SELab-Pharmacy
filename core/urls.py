@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import search_patient
 from .views import home, signup, login, MedicineViewSet, PrescriptionViewSet
+from .views import patient_prescriptions
 
 router = DefaultRouter()
 router.register('medicines', MedicineViewSet, basename='medicines')
@@ -13,4 +14,5 @@ urlpatterns = [
     path('login/', login),
     path('', include(router.urls)),
     path('patients/search/', search_patient),
+    path('patients/<int:patient_id>/prescriptions/', patient_prescriptions),
 ]
