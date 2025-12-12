@@ -14,6 +14,58 @@ from .serializers import PrescriptionSerializer
 from django.utils.crypto import get_random_string
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
+from .models import Order, OrderItem, Alert, Medicine
+
+@api_view(['POST'])
+def create_order(request):
+    prescription_id = request.data.get('prescription_id')
+    patient_id = request.data.get('patient_id')
+
+    try:
+        prescription = Prescription.objects.get(id=prescription_id)
+    except Prescription.DoesNotExist:
+        return Response({"error": "Prescription not found"}, status=404)
+
+    total_amount = 0
+    order = Order.objects.create(
+        prescription=prescription,
+        patient_id=patient_id,
+        total_amount=0
+    )
+
+    for item in prescription.items.all():
+        medicine = item.medicine
+
+        if medicine.stock < item.quantity:
+            return Response(
+                {"error": f"Insufficient stock for {medicine.name}"},
+                status=400
+            )
+
+        medicine.stock -= item.quantity
+        medicine.save()
+
+        price = medicine.price * item.quantity
+        total_amount += price
+
+        OrderItem.objects.create(
+            order=order,
+            medicine=medicine,
+            quantity=item.quantity,
+            unit_price=medicine.price
+        )
+
+        if medicine.stock <= 5:
+            Alert.objects.create(
+                medicine=medicine,
+                type='low_stock',
+                message=f"Low stock for {medicine.name}"
+            )
+
+    order.total_amount = total_amount
+    order.save()
+
+    return Response({"message": "Order created successfully"}, status=201)
 
 @api_view(['GET'])
 def patient_prescriptions(request, patient_id):
