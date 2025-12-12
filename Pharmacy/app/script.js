@@ -172,6 +172,38 @@ function loadPharmacistDashboard() {
     loadMedicines();
     loadUsers();
     loadStats();
+    loadAllOrders();
+}
+
+async function loadAllOrders() {
+    try {
+        const res = await fetch("http://127.0.0.1:8000/api/orders/");
+        const orders = await res.json();
+
+        const container = document.getElementById('all-orders');
+
+        if (!orders.length) {
+            container.innerHTML = `
+                <tr>
+                    <td colspan="4" style="text-align:center;">
+                        No orders found
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        container.innerHTML = orders.map(o => `
+            <tr>
+                <td>${o.id}</td>
+                <td>${o.patient_name}</td>
+                <td>$${o.total_amount}</td>
+                <td>${new Date(o.created_at).toLocaleDateString()}</td>
+            </tr>
+        `).join("");
+    } catch (err) {
+        alert("Failed to load orders");
+    }
 }
 
 async function loadMedicines() {
