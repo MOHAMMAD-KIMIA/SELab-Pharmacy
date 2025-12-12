@@ -25,7 +25,21 @@ class SignupSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
     role = serializers.CharField()
-    national_id = serializers.CharField()
+    national_id = serializers.CharField(
+        required=False,
+        allow_blank=True
+    )
+
+    def validate(self, data):
+        role = data.get("role")
+        national_id = data.get("national_id")
+
+        if role == "patient" and not national_id:
+            raise serializers.ValidationError({
+                "national_id": "National ID is required for patients"
+            })
+
+        return data
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
@@ -47,11 +61,10 @@ class SignupSerializer(serializers.Serializer):
         Profile.objects.create(
             user=user,
             role=validated_data["role"],
-            national_id=validated_data["national_id"]
+            national_id=validated_data.get("national_id", "")
         )
 
         return user
-
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField()
