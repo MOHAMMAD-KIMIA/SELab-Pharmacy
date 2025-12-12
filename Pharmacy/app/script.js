@@ -725,6 +725,12 @@ async function loadPrescriptionHistory() {
     }).join("");
 }
 
+function placeOrderFromHistory(prescriptionId) {
+    const prescription = { id: prescriptionId };
+    currentPrescription = prescription;
+    placeOrder();
+}
+
 function loadOrderHistory() {
     const orders = JSON.parse(localStorage.getItem('orders') || '[]').filter(o => o.patientId === currentUser.email);
     const container = document.getElementById('order-history-list');
