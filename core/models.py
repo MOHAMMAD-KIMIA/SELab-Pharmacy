@@ -2,8 +2,6 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-# ---------- پروفایل کاربر (نقش و کد ملی) ----------
-
 class Profile(models.Model):
     ROLE_CHOICES = (
         ('doctor', 'Doctor'),
@@ -19,16 +17,12 @@ class Profile(models.Model):
         return f"{self.user.username} ({self.role})"
 
 
-# ---------- دسته‌بندی دارو ----------
-
 class MedicineCategory(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
         return self.name
 
-
-# ---------- دارو (Medicine) ----------
 
 class Medicine(models.Model):
     name = models.CharField(max_length=100)
@@ -43,8 +37,6 @@ class Medicine(models.Model):
         return self.name
 
 
-# ---------- نسخه (Prescription) ----------
-
 class Prescription(models.Model):
     prescription_number = models.CharField(max_length=50, unique=True)
     doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='doctor_prescriptions')
@@ -56,20 +48,16 @@ class Prescription(models.Model):
         return self.prescription_number
 
 
-# ---------- آیتم‌های نسخه ----------
-
 class PrescriptionItem(models.Model):
     prescription = models.ForeignKey(Prescription, on_delete=models.CASCADE, related_name='items')
     medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE)
-    dosage = models.CharField(max_length=100)      # 500mg
-    duration = models.CharField(max_length=100)    # 7 days
+    dosage = models.CharField(max_length=100)      
+    duration = models.CharField(max_length=100) 
     quantity = models.IntegerField()
 
     def __str__(self):
         return f"{self.medicine.name} x {self.quantity}"
 
-
-# ---------- سفارش (Order) ----------
 
 class Order(models.Model):
     prescription = models.ForeignKey(Prescription, on_delete=models.CASCADE, related_name='orders')
@@ -82,8 +70,6 @@ class Order(models.Model):
         return f"Order #{self.id}"
 
 
-# ---------- آیتم‌های سفارش ----------
-
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE)
@@ -93,8 +79,6 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.medicine.name} ({self.quantity})"
 
-
-# ---------- هشدارها (مثلاً کمبود موجودی) ----------
 
 class Alert(models.Model):
     ALERT_TYPES = (
