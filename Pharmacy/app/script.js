@@ -450,46 +450,42 @@ function removeMedicine(index) {
     updatePrescribedMedicinesList();
 }
 
-function createPrescription(event) {
+async function createPrescription(event) {
     event.preventDefault();
-    
+
     const patientNationalId = document.getElementById('patient-national-id').value;
 
-    if (prescribedMedicines.length === 0) {
-        alert('Please add at least one medicine');
+    if (!prescribedMedicines.length) {
+        alert("Please add at least one medicine");
         return;
     }
 
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const patient = users.find(u => u.role === 'patient' && u.nationalId === patientNationalId);
+    const items = prescribedMedicines.map(m => ({
+        medicine: m.medicineId,
+        dosage: m.dosage,
+        duration: m.duration,
+        quantity: m.quantity
+    }));
 
-    if (!patient) {
-        alert('Patient not found with this National ID');
-        return;
-    }
-
-    const prescriptionNumber = generatePrescriptionNumber();
-    const prescription = {
-        id: generateId(),
-        prescriptionNumber,
-        patientId: patient.email,
-        patientName: patient.name,
-        doctorId: currentUser.email,
-        doctorName: currentUser.name,
-        medicines: prescribedMedicines,
-        createdAt: new Date().toISOString(),
-        status: 'active'
+    const body = {
+        doctor: currentUser.id,
+        patient: currentPrescriptionPatientId, 
+        items: items
     };
 
-    const prescriptions = JSON.parse(localStorage.getItem('prescriptions') || '[]');
-    prescriptions.push(prescription);
-    localStorage.setItem('prescriptions', JSON.stringify(prescriptions));
+    const response = await fetch("http://127.0.0.1:8000/api/prescriptions/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
 
-    alert(`Prescription created successfully!\n\nPrescription ID: ${prescriptionNumber}\n\nProvide this ID to the patient.`);
-    
-    document.getElementById('patient-national-id').value = '';
-    prescribedMedicines = [];
-    updatePrescribedMedicinesList();
+    if (response.ok) {
+        alert("Prescription created successfully!");
+        prescribedMedicines = [];
+        updatePrescribedMedicinesList();
+    } else {
+        alert("Error creating prescription");
+    }
 }
 
 // Patient Dashboard
