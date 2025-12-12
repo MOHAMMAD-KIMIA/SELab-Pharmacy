@@ -529,6 +529,18 @@ async function createPrescription(event) {
     }
 }
 
+async function findPatientByNationalId(nationalId) {
+    const res = await fetch(
+        `http://127.0.0.1:8000/api/patients/search/?national_id=${nationalId}`
+    );
+
+    if (!res.ok) {
+        throw new Error("Patient not found");
+    }
+
+    return await res.json();
+}
+
 // Patient Dashboard
 function loadPatientDashboard() {
     document.getElementById('patient-name').textContent = currentUser.name;
