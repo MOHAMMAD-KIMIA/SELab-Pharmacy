@@ -15,6 +15,19 @@ from django.utils.crypto import get_random_string
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 from .models import Order, OrderItem, Alert, Medicine
+@api_view(['GET'])
+def patient_orders(request, patient_id):
+    orders = Order.objects.filter(patient_id=patient_id).order_by('-created_at')
+    serializer = OrderSerializer(orders, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def all_orders(request):
+    orders = Order.objects.all().order_by('-created_at')
+    serializer = OrderSerializer(orders, many=True)
+    return Response(serializer.data)
+
 
 @api_view(['POST'])
 def create_order(request):
