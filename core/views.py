@@ -39,11 +39,18 @@ def create_order(request):
     except Prescription.DoesNotExist:
         return Response({"error": "Prescription not found"}, status=404)
 
+    if prescription.status != 'active':
+        return Response(
+            {"error": "This prescription is no longer active"},
+            status=400
+        )
+
     total_amount = 0
     order = Order.objects.create(
         prescription=prescription,
         patient_id=patient_id,
-        total_amount=0
+        total_amount=0,
+        status='completed'
     )
 
     for item in prescription.items.all():
@@ -78,7 +85,13 @@ def create_order(request):
     order.total_amount = total_amount
     order.save()
 
-    return Response({"message": "Order created successfully"}, status=201)
+    prescription.status = 'completed'
+    prescription.save()
+
+    return Response(
+        {"message": "Order created and prescription completed"},
+        status=201
+    )
 
 @api_view(['GET'])
 def patient_prescriptions(request, patient_id):
