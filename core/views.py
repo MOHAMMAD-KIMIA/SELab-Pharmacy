@@ -12,6 +12,28 @@ from rest_framework import viewsets
 from .models import Prescription
 from .serializers import PrescriptionSerializer
 from django.utils.crypto import get_random_string
+from django.contrib.auth.models import User
+from rest_framework.decorators import api_view
+
+@api_view(['GET'])
+def search_patient(request):
+    national_id = request.GET.get('national_id')
+
+    if not national_id:
+        return Response({"error": "national_id is required"}, status=400)
+
+    try:
+        profile = Profile.objects.get(national_id=national_id, role='patient')
+        user = profile.user
+
+        return Response({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "national_id": profile.national_id
+        })
+    except Profile.DoesNotExist:
+        return Response({"error": "Patient not found"}, status=404)
 
 
 def generate_prescription_number():
