@@ -12,4 +12,5 @@ urlpatterns = [
     path('signup/', signup),
     path('login/', login),
     path('', include(router.urls)),
+    path('patients/search/', search_patient),
 ]
