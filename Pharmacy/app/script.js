@@ -494,7 +494,7 @@ async function createPrescription(event) {
         const patient = await findPatientByNationalId(nationalId);
 
         const items = prescribedMedicines.map(m => ({
-            medicine: m.medicineId,
+            medicine: m.medicineId,   // 🔑 مهم
             dosage: m.dosage,
             duration: m.duration,
             quantity: m.quantity
@@ -506,6 +506,8 @@ async function createPrescription(event) {
             items: items
         };
 
+        console.log("Prescription payload:", body); // 👈 حتماً ببین
+
         const response = await fetch(
             "http://127.0.0.1:8000/api/prescriptions/",
             {
@@ -515,14 +517,18 @@ async function createPrescription(event) {
             }
         );
 
-        if (response.ok) {
-            alert("Prescription created successfully!");
-            prescribedMedicines = [];
-            updatePrescribedMedicinesList();
-            document.getElementById('patient-national-id').value = "";
-        } else {
-            alert("Error creating prescription");
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error(data);
+            alert("Failed to create prescription");
+            return;
         }
+
+        alert("Prescription created successfully!");
+        prescribedMedicines = [];
+        updatePrescribedMedicinesList();
+        document.getElementById('patient-national-id').value = "";
 
     } catch (err) {
         alert(err.message);
