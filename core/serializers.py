@@ -114,7 +114,8 @@ class PrescriptionSerializer(serializers.ModelSerializer):
             PrescriptionItem.objects.create(
                 prescription=prescription,
                 **item
-            )
+    )
+
 
         return prescription
     

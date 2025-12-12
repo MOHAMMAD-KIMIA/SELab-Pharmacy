@@ -49,14 +49,15 @@ class Prescription(models.Model):
 
 
 class PrescriptionItem(models.Model):
-    prescription = models.ForeignKey(Prescription, on_delete=models.CASCADE, related_name='items')
+    prescription = models.ForeignKey(
+        Prescription,
+        related_name="items",
+        on_delete=models.CASCADE
+    )
     medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE)
-    dosage = models.CharField(max_length=100)      
-    duration = models.CharField(max_length=100) 
-    quantity = models.IntegerField()
-
-    def __str__(self):
-        return f"{self.medicine.name} x {self.quantity}"
+    dosage = models.CharField(max_length=100)
+    duration = models.CharField(max_length=100)
+    quantity = models.PositiveIntegerField()
 
 
 class Order(models.Model):
