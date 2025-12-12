@@ -16,6 +16,13 @@ from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 
 @api_view(['GET'])
+def patient_prescriptions(request, patient_id):
+    prescriptions = Prescription.objects.filter(patient_id=patient_id).order_by('-created_at')
+    serializer = PrescriptionSerializer(prescriptions, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
 def search_patient(request):
     national_id = request.GET.get('national_id')
 
