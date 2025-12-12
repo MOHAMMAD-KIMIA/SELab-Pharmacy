@@ -451,38 +451,49 @@ function removeMedicine(index) {
 async function createPrescription(event) {
     event.preventDefault();
 
-    const patientNationalId = document.getElementById('patient-national-id').value;
+    const nationalId = document.getElementById('patient-national-id').value;
 
     if (!prescribedMedicines.length) {
         alert("Please add at least one medicine");
         return;
     }
 
-    const items = prescribedMedicines.map(m => ({
-        medicine: m.medicineId,
-        dosage: m.dosage,
-        duration: m.duration,
-        quantity: m.quantity
-    }));
+    try {
+        const patient = await findPatientByNationalId(nationalId);
 
-    const body = {
-        doctor: currentUser.id,
-        patient: currentPrescriptionPatientId, 
-        items: items
-    };
+        const items = prescribedMedicines.map(m => ({
+            medicine: m.medicineId,
+            dosage: m.dosage,
+            duration: m.duration,
+            quantity: m.quantity
+        }));
 
-    const response = await fetch("http://127.0.0.1:8000/api/prescriptions/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-    });
+        const body = {
+            doctor: currentUser.id,
+            patient: patient.id,
+            items: items
+        };
 
-    if (response.ok) {
-        alert("Prescription created successfully!");
-        prescribedMedicines = [];
-        updatePrescribedMedicinesList();
-    } else {
-        alert("Error creating prescription");
+        const response = await fetch(
+            "http://127.0.0.1:8000/api/prescriptions/",
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            }
+        );
+
+        if (response.ok) {
+            alert("Prescription created successfully!");
+            prescribedMedicines = [];
+            updatePrescribedMedicinesList();
+            document.getElementById('patient-national-id').value = "";
+        } else {
+            alert("Error creating prescription");
+        }
+
+    } catch (err) {
+        alert(err.message);
     }
 }
 
