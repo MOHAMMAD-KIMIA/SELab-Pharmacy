@@ -125,9 +125,27 @@ def generate_prescription_number():
     return "RX-" + get_random_string(8).upper()
 
 
+# class PrescriptionViewSet(viewsets.ModelViewSet):
+#     queryset = Prescription.objects.all().order_by('-id')
+#     serializer_class = PrescriptionSerializer
+
+from rest_framework.response import Response
+from rest_framework import status
+
 class PrescriptionViewSet(viewsets.ModelViewSet):
     queryset = Prescription.objects.all().order_by('-id')
     serializer_class = PrescriptionSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if not serializer.is_valid():
+            print("Prescription serializer errors:", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 
 class MedicineViewSet(viewsets.ModelViewSet):
