@@ -146,15 +146,20 @@ def home(request):
 
 
 
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view
+
+@csrf_exempt
 @api_view(['POST'])
 def signup(request):
     serializer = SignupSerializer(data=request.data)
 
     if serializer.is_valid():
-        user = serializer.save()
-        return Response({"message": "Account created successfully!"}, status=status.HTTP_201_CREATED)
+        serializer.save()
+        return Response({"message": "Account created successfully"}, status=201)
 
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response(serializer.errors, status=400)
+
 
 
 
