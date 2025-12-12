@@ -129,11 +129,6 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
     queryset = Prescription.objects.all().order_by('-id')
     serializer_class = PrescriptionSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(
-            prescription_number = generate_prescription_number()
-        )
-
 
 class MedicineViewSet(viewsets.ModelViewSet):
     queryset = Medicine.objects.all().order_by('-id')

@@ -93,29 +93,34 @@ class PrescriptionItemSerializer(serializers.ModelSerializer):
 
 class PrescriptionSerializer(serializers.ModelSerializer):
     items = PrescriptionItemSerializer(many=True)
-    doctor_name = serializers.CharField(source='doctor.username', read_only=True)
-    patient_name = serializers.CharField(source='patient.username', read_only=True)
 
     class Meta:
         model = Prescription
         fields = [
-            'id', 'prescription_number',
-            'doctor', 'doctor_name',
-            'patient', 'patient_name',
-            'created_at', 'status',
+            'id',
+            'prescription_number',
+            'doctor',
+            'patient',
+            'status',
+            'created_at',
             'items'
         ]
+        read_only_fields = ['prescription_number', 'status', 'created_at']
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
-        prescription = Prescription.objects.create(**validated_data)
+
+        prescription = Prescription.objects.create(
+            prescription_number=generate_prescription_number(),
+            status='active',
+            **validated_data
+        )
 
         for item in items_data:
             PrescriptionItem.objects.create(
                 prescription=prescription,
                 **item
-    )
-
+            )
 
         return prescription
     
