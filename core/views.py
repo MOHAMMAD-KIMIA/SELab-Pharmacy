@@ -3,13 +3,30 @@ from django.contrib.auth import authenticate
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
-
 from .models import Profile
 from .serializers import SignupSerializer, LoginSerializer, ProfileSerializer
-
 from rest_framework import viewsets
 from .models import Medicine
 from .serializers import MedicineSerializer
+from rest_framework import viewsets
+from .models import Prescription
+from .serializers import PrescriptionSerializer
+from django.utils.crypto import get_random_string
+
+
+def generate_prescription_number():
+    return "RX-" + get_random_string(8).upper()
+
+
+class PrescriptionViewSet(viewsets.ModelViewSet):
+    queryset = Prescription.objects.all().order_by('-id')
+    serializer_class = PrescriptionSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(
+            prescription_number = generate_prescription_number()
+        )
+
 
 class MedicineViewSet(viewsets.ModelViewSet):
     queryset = Medicine.objects.all().order_by('-id')
