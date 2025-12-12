@@ -162,32 +162,30 @@ def signup(request):
 
 
 
-
-
+@csrf_exempt
 @api_view(['POST'])
 def login(request):
     serializer = LoginSerializer(data=request.data)
 
     if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=400)
 
-    username = serializer.validated_data['username']
-    password = serializer.validated_data['password']
+    user = authenticate(
+        username=serializer.validated_data['username'],
+        password=serializer.validated_data['password']
+    )
 
-    user = authenticate(username=username, password=password)
+    if not user:
+        return Response({"error": "Invalid credentials"}, status=401)
 
-    if user:
-        profile = Profile.objects.get(user=user)
+    profile = Profile.objects.get(user=user)
 
-        return Response({
-            "message": "Login successful!",
-            "user": {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "role": profile.role,
-                "national_id": profile.national_id
-            }
-        }, status=200)
-
-    return Response({"error": "Invalid username or password"}, status=401)
+    return Response({
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "role": profile.role,
+            "national_id": profile.national_id
+        }
+    })
