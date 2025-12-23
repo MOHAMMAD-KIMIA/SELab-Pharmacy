@@ -34,9 +34,9 @@ function showPage(pageId) {
     document.getElementById(pageId).classList.add('active');
 }
 
-function showAuth() {
-    showPage('auth-page');
-}
+// function showAuth() {
+//     showPage('auth-page');
+// }
 
 function switchAuthTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));

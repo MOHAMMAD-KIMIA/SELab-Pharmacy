@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Home | PharmaCare{% endblock %}
+
+{% block content %}
+<div class="landing-page">
+
+    <div class="hero">
+        <div class="container">
+            <h1>Complete Pharmacy<br>Management Solution</h1>
+            <p>Streamline your pharmacy operations...</p>
+            <a href="{% url 'signin' %}">
+                <button class="btn btn-primary">Get Started</button>
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>Medicine Inventory</h3>
+                <p>Complete CRUD operations...</p>
+            </div>
+            <div class="feature-card">
+                <h3>Digital Prescriptions</h3>
+                <p>Doctors can create...</p>
+            </div>
+            <div class="feature-card">
+                <h3>Patient Orders</h3>
+                <p>Easy prescription retrieval...</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

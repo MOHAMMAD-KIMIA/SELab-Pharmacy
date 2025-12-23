@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Pharmacist Dashboard{% endblock %}
+
+{% block content %}
+<div class="page dashboard">
+
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="container flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="logo-icon" style="width: 2rem; height: 2rem;">
+                    <svg fill="none" stroke="white" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2>Pharmacy Admin</h2>
+                    <p class="muted">Welcome, {{ request.user.username }}</p>
+                </div>
+            </div>
+            <a href="{% url 'logout' %}" class="btn btn-outline">Logout</a>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="dashboard-content container">
+
+        <div class="flex items-center justify-between mb-4">
+            <h1>Medicine Inventory</h1>
+            <button class="btn btn-primary" onclick="showAddMedicine()">Add Medicine</button>
+        </div>
+
+        <!-- Medicines -->
+        <div class="card">
+            <table>
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Batch</th>
+                    <th>Expiry</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="medicines-table"></tbody>
+            </table>
+        </div>
+
+        <!-- Users -->
+        <div class="card">
+            <h2>User Management</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>National ID</th>
+                </tr>
+                </thead>
+                <tbody id="users-table"></tbody>
+            </table>
+        </div>
+
+        <!-- Orders -->
+        <div class="card">
+            <h2>All Orders</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Patient</th>
+                    <th>Total Amount</th>
+                    <th>Date</th>
+                </tr>
+                </thead>
+                <tbody id="all-orders"></tbody>
+            </table>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid-3">
+            <div class="card">
+                <h3>Total Revenue</h3>
+                <p id="total-revenue">$0.00</p>
+            </div>
+            <div class="card">
+                <h3>Total Medicines</h3>
+                <p id="total-medicines">0</p>
+            </div>
+            <div class="card">
+                <h3>Low Stock Items</h3>
+                <p id="low-stock-count">0</p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% include "modals/medicine_modal.html" %}
+{% endblock %}

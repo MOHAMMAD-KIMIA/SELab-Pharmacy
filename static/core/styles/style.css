@@ -129,7 +129,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1rem;
+    padding: 1rem;  
 }
 
 .auth-card {
@@ -296,8 +296,10 @@ svg {
     height: 1.5rem;
 }
 
-.page { display: none; }
-.page.active { display: block; }
+/* .page { 
+    display: none;
+}
+.page .active { display: none; } */
 
 @media (max-width: 768px) {
     .grid-2 { grid-template-columns: 1fr; }

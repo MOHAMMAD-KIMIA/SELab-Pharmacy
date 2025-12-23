@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Patient Dashboard{% endblock %}
+
+{% block content %}
+<div class="page dashboard">
+
+    <div class="dashboard-header">
+        <div class="container flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="logo-icon" style="background:#7c3aed;">
+                    <svg fill="none" stroke="white" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2>Patient Portal</h2>
+                    <p class="muted">Welcome, {{ request.user.username }}</p>
+                </div>
+            </div>
+            <a href="{% url 'logout' %}" class="btn btn-outline">Logout</a>
+        </div>
+    </div>
+
+    <div class="dashboard-content container">
+
+        <div class="card">
+            <h2>Retrieve Prescription</h2>
+            <form onsubmit="searchPrescription(event)">
+                <input type="text" placeholder="Prescription ID" required>
+                <button class="btn btn-primary">Search</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Your Prescriptions</h2>
+            <div id="prescription-history-list"></div>
+        </div>
+
+        <div class="card">
+            <h2>Order History</h2>
+            <div id="order-history-list"></div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
