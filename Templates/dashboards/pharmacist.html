@@ -28,76 +28,104 @@
     <!-- Content -->
     <div class="dashboard-content container">
 
-        <div class="flex items-center justify-between mb-4">
-            <h1>Medicine Inventory</h1>
-            <button class="btn btn-primary" onclick="showAddMedicine()">Add Medicine</button>
-        </div>
+        <!-- ✅ Grid wrapper: everything becomes row-based -->
+        <div class="dashboard-grid">
 
-        <!-- Medicines -->
-        <div class="card">
-            <table>
-                <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th>Batch</th>
-                    <th>Expiry</th>
-                    <th>Price</th>
-                    <th>Stock</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody id="medicines-table"></tbody>
-            </table>
-        </div>
-
-        <!-- Users -->
-        <div class="card">
-            <h2>User Management</h2>
-            <table>
-                <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>National ID</th>
-                </tr>
-                </thead>
-                <tbody id="users-table"></tbody>
-            </table>
-        </div>
-
-        <!-- Orders -->
-        <div class="card">
-            <h2>All Orders</h2>
-            <table>
-                <thead>
-                <tr>
-                    <th>Order ID</th>
-                    <th>Patient</th>
-                    <th>Total Amount</th>
-                    <th>Date</th>
-                </tr>
-                </thead>
-                <tbody id="all-orders"></tbody>
-            </table>
-        </div>
-
-        <!-- Stats -->
-        <div class="grid-3">
-            <div class="card">
-                <h3>Total Revenue</h3>
-                <p id="total-revenue">$0.00</p>
+            <!-- ✅ Top title + add button (full width) -->
+            <div class="card card-span-2" style="padding: 18px 20px;">
+                <div class="flex items-center justify-between">
+                    <h1 style="margin: 0;">Medicine Inventory</h1>
+                    <button type="button" class="btn btn-primary" onclick="showAddMedicine()">Add Medicine</button>
+                </div>
+                <p class="muted" style="margin: 10px 0 0 0;">
+                    Manage medicines, users, and orders from one place.
+                </p>
             </div>
-            <div class="card">
-                <h3>Total Medicines</h3>
-                <p id="total-medicines">0</p>
+
+            <!-- Medicines (full width) -->
+            <div class="card card-span-2">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Batch</th>
+                            <th>Expiry</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="medicines-table"></tbody>
+                    </table>
+                </div>
             </div>
-            <div class="card">
-                <h3>Low Stock Items</h3>
-                <p id="low-stock-count">0</p>
+
+            <!-- Users (full width) -->
+            <div class="card card-span-2">
+                <div class="flex items-center justify-between" style="margin-bottom: 8px;">
+                    <h2 style="margin: 0;">User Management</h2>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>National ID</th>
+                        </tr>
+                        </thead>
+                        <tbody id="users-table"></tbody>
+                    </table>
+                </div>
             </div>
+
+            <!-- Orders (full width) -->
+            <div class="card card-span-2">
+                <div class="flex items-center justify-between" style="margin-bottom: 8px;">
+                    <h2 style="margin: 0;">All Orders</h2>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Patient</th>
+                            <th>Total Amount</th>
+                            <th>Date</th>
+                        </tr>
+                        </thead>
+                        <tbody id="all-orders"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ✅ Stats (auto row-based: 3 cards side-by-side if space) -->
+            <div class="card">
+                <h3 style="margin-top: 0;">Total Revenue</h3>
+                <p id="total-revenue" style="font-size: 1.5rem; font-weight: 700; margin: 0.25rem 0 0;">
+                    $0.00
+                </p>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top: 0;">Total Medicines</h3>
+                <p id="total-medicines" style="font-size: 1.5rem; font-weight: 700; margin: 0.25rem 0 0;">
+                    0
+                </p>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top: 0;">Low Stock Items</h3>
+                <p id="low-stock-count" style="font-size: 1.5rem; font-weight: 700; margin: 0.25rem 0 0;">
+                    0
+                </p>
+            </div>
+
         </div>
+        <!-- /dashboard-grid -->
 
     </div>
 

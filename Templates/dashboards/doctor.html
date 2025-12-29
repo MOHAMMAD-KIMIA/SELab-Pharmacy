@@ -6,68 +6,77 @@
 {% block content %}
 <div class="page dashboard">
 
-    <div class="dashboard-header">
-        <div class="container flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <div class="logo-icon" style="background:#10b981;">
-                    <svg fill="none" stroke="white" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
-                    </svg>
-                </div>
-                <div>
-                    <h2>Doctor Portal</h2>
-                    <p class="muted">Dr. {{ request.user.username }}</p>
-                </div>
-            </div>
-            <a href="{% url 'logout' %}" class="btn btn-outline">Logout</a>
+  <div class="dashboard-header">
+    <div class="container flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="logo-icon" style="background:#10b981;">
+          <svg fill="none" stroke="white" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+          </svg>
         </div>
+        <div>
+          <h2>Doctor Portal</h2>
+          <p class="muted">Dr. {{ request.user.username }}</p>
+        </div>
+      </div>
+      <a href="{% url 'logout' %}" class="btn btn-outline">Logout</a>
+    </div>
+  </div>
+
+  <div class="dashboard-content container grid-2">
+
+    <div class="card">
+      <h2>Create Prescription</h2>
+
+      <form id="doctor-prescription-form">
+        <div class="input-group">
+          <label for="doctor-patient-national-id">Patient National ID</label>
+          <input id="doctor-patient-national-id" type="text" placeholder="10 digits" required>
+        </div>
+
+        <div class="input-group">
+          <label for="doctor-medicine-select">Select Medicine</label>
+          <select id="doctor-medicine-select" required>
+            <option value="">Loading medicines...</option>
+          </select>
+        </div>
+
+        <div class="grid-2">
+          <div class="input-group">
+            <label for="doctor-dosage">Dosage</label>
+            <input id="doctor-dosage" type="text" placeholder="e.g. 1 tablet">
+          </div>
+
+          <div class="input-group">
+            <label for="doctor-duration">Duration</label>
+            <input id="doctor-duration" type="text" placeholder="e.g. 7 days">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="doctor-qty">Quantity</label>
+          <input id="doctor-qty" type="number" min="1" value="1" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Create Prescription</button>
+      </form>
     </div>
 
-    <div class="dashboard-content container grid-2">
-
-        <!-- Prescription -->
-        <div class="card">
-            <h2>Create Prescription</h2>
-            <form onsubmit="createPrescription(event)">
-                <div class="input-group">
-                    <label>Patient National ID</label>
-                    <input type="text" required>
-                </div>
-
-                <div class="input-group">
-                    <label>Select Medicine</label>
-                    <select id="medicine-select"></select>
-                </div>
-
-                <div class="grid-2">
-                    <input type="text" placeholder="Dosage">
-                    <input type="text" placeholder="Duration">
-                </div>
-
-                <input type="number" min="1" value="1">
-
-                <button type="submit" class="btn btn-primary">
-                    Create Prescription
-                </button>
-            </form>
-        </div>
-
-        <!-- Medicine List -->
-        <div class="card">
-            <h2>Medicine Database</h2>
-            <table>
-                <thead>
-                <tr>
-                    <th>Medicine</th>
-                    <th>Category</th>
-                    <th>Stock</th>
-                </tr>
-                </thead>
-                <tbody id="doctor-medicines-table"></tbody>
-            </table>
-        </div>
-
+    <div class="card">
+      <h2>Medicine Database</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Medicine</th>
+            <th>Category</th>
+            <th>Stock</th>
+          </tr>
+        </thead>
+        <tbody id="doctor-medicine-table"></tbody>
+      </table>
     </div>
+
+  </div>
 </div>
 {% endblock %}

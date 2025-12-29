@@ -1,0 +1,98 @@
+{% load static %}
+
+<footer style="background:#0b1220; color:#cbd5e1; margin-top:0;">
+  <div class="container" style="padding: 2.5rem 0;">
+
+    <div style="display:grid; grid-template-columns: 2fr 1fr 1.2fr; gap: 1.5rem;">
+
+      <!-- Brand -->
+      <div>
+        <div style="display:flex; align-items:center; gap:.75rem; margin-bottom:.75rem;">
+          <div class="logo-icon" style="width:40px; height:40px; background:#2563eb;"></div>
+          <strong style="font-size: 1.1rem;">PharmaCare</strong>
+        </div>
+
+        <p style="opacity:.85; max-width: 420px; margin-bottom: 1rem;">
+          A lightweight pharmacy management system for academic projects:
+          authentication, dashboards, inventory, prescriptions, and orders.
+        </p>
+
+        <!-- Social -->
+        <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
+          <a href="https://github.com/MOHAMMAD-KIMIA" target="_blank" rel="noopener"
+             class="btn btn-outline"
+             style="background:transparent; border-color: rgba(255,255,255,.18); color:#cbd5e1; padding:.55rem .8rem;">
+            GitHub
+          </a>
+
+          <a href="https://www.linkedin.com/in/amirmohammad-kimia-94b6011a9/" target="_blank" rel="noopener"
+             class="btn btn-outline"
+             style="background:transparent; border-color: rgba(255,255,255,.18); color:#cbd5e1; padding:.55rem .8rem;">
+            LinkedIn
+          </a>
+
+          <a href="https://t.me/MOKIIM" target="_blank" rel="noopener"
+             class="btn btn-outline"
+             style="background:transparent; border-color: rgba(255,255,255,.18); color:#cbd5e1; padding:.55rem .8rem;">
+            Telegram
+          </a>
+        </div>
+      </div>
+
+      <!-- Pages -->
+      <div>
+        <h4 style="margin-bottom:.75rem; color:white;">Pages</h4>
+        <div style="display:grid; gap:.5rem;">
+          <a href="/" style="color:#cbd5e1; text-decoration:none;">Home</a>
+          <a href="{% url 'signin' %}" style="color:#cbd5e1; text-decoration:none;">Sign In</a>
+          <a href="{% url 'contact' %}" style="color:#cbd5e1; text-decoration:none;">Contact Us</a>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div>
+        <h4 style="margin-bottom:.75rem; color:white;">Contact Us</h4>
+
+        <div style="display:grid; gap:.6rem;">
+          <div style="opacity:.9;">
+            <strong style="color:white;">Phone:</strong>
+            <a href="tel:+989308730070" style="color:#cbd5e1; text-decoration:none;">
+              +98 930 873 0070
+            </a>
+          </div>
+
+          <div style="opacity:.9;">
+            <strong style="color:white;">Email:</strong>
+            <a href="mailto:amir.m.kimia@gmail.com" style="color:#cbd5e1; text-decoration:none;">
+              amir.m.kimia@gmail.com
+            </a>
+          </div>
+
+          <div style="opacity:.9;">
+            <strong style="color:white;">Telegram:</strong>
+            <a href="https://t.me/MOKIIM" target="_blank" rel="noopener"
+               style="color:#cbd5e1; text-decoration:none;">
+              @Mohammad Kimia
+            </a>
+          </div>
+
+          <div style="opacity:.9;">
+            <strong style="color:white;">LinkedIn:</strong>
+            <a href="https://www.linkedin.com/in/amirmohammad-kimia-94b6011a9/" target="_blank" rel="noopener"
+               style="color:#cbd5e1; text-decoration:none;">
+              AmirMohammad Kimia
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="border-top: 1px solid rgba(255,255,255,.08); margin-top: 2rem; padding-top: 1rem;
+                display:flex; justify-content:space-between; flex-wrap:wrap; gap:.5rem;">
+      <span style="opacity:.8;">© 2025 PharmaCare</span>
+      <span style="opacity:.8;">Built with Django (No DRF)</span>
+    </div>
+
+  </div>
+</footer>

@@ -1,0 +1,59 @@
+<div id="medicine-modal" class="modal" aria-hidden="true">
+  <div class="modal-backdrop" onclick="closeMedicineModal()"></div>
+
+  <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="medicine-modal-title">
+    <div class="modal-header">
+      <h3 id="medicine-modal-title" class="modal-title">Add Medicine</h3>
+
+      <button type="button" class="btn btn-outline btn-sm" onclick="closeMedicineModal()">
+        Close
+      </button>
+    </div>
+
+    <form id="medicine-form">
+      <input type="hidden" id="medicine-id" name="id" value="" />
+
+      <div class="modal-grid">
+        <div class="input-group full">
+          <label for="medicine-name">Medicine Name</label>
+          <input id="medicine-name" name="name" type="text" placeholder="e.g. Cetirizine" required />
+        </div>
+
+        <div class="input-group">
+          <label for="medicine-category">Category</label>
+          <input id="medicine-category" name="category" type="text" placeholder="e.g. Antihistamine" />
+        </div>
+
+        <div class="input-group">
+          <label for="medicine-batch">Batch</label>
+          <input id="medicine-batch" name="batch" type="text" placeholder="e.g. B-102" />
+        </div>
+
+        <div class="input-group">
+          <label for="medicine-expiry">Expiry</label>
+          <input id="medicine-expiry" name="expiry" type="date" />
+        </div>
+
+        <div class="input-group">
+          <label for="medicine-price">Price</label>
+          <input id="medicine-price" name="price" type="number" step="0.01" min="0" placeholder="e.g. 8" />
+        </div>
+
+        <div class="input-group">
+          <label for="medicine-stock">Stock</label>
+          <input id="medicine-stock" name="stock" type="number" min="0" placeholder="e.g. 50" />
+        </div>
+
+        <div class="input-group full">
+          <label for="medicine-notes">Notes</label>
+          <input id="medicine-notes" name="notes" type="text" placeholder="optional" />
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeMedicineModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="medicine-save-btn">Save</button>
+      </div>
+    </form>
+  </div>
+</div>

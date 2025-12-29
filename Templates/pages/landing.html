@@ -1,36 +1,130 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Home | PharmaCare{% endblock %}
 
 {% block content %}
-<div class="landing-page">
 
-    <div class="hero">
-        <div class="container">
-            <h1>Complete Pharmacy<br>Management Solution</h1>
-            <p>Streamline your pharmacy operations...</p>
-            <a href="{% url 'signin' %}">
-                <button class="btn btn-primary">Get Started</button>
+<!-- HERO -->
+<section class="page" style="background: #f8fafc;">
+  <div class="container" style="padding: 5rem 0;">
+    <div style="display:grid; grid-template-columns: 1.3fr 1fr; gap: 2rem; align-items:center;">
+      
+      <div>
+        <h1 style="font-size: 3rem; line-height: 1.1; margin-bottom: 1rem;">
+          Complete Pharmacy<br/>Management Solution
+        </h1>
+        <p class="muted" style="font-size: 1.1rem; margin-bottom: 1.75rem;">
+          Manage prescriptions, medicines, patients, and orders in one secure platform.
+        </p>
+
+        <div style="display:flex; gap: .75rem; flex-wrap:wrap;">
+          <a href="{% url 'signin' %}" class="btn btn-primary" style="padding:.85rem 1.25rem;">
+            Get Started
+          </a>
+          <a href="{% url 'signin' %}" class="btn btn-outline" style="padding:.85rem 1.25rem; background:white;">
+            Sign In
+          </a>
+        </div>
+
+        <div style="margin-top: 1.25rem;" class="muted">
+          ✔ Fast & Simple &nbsp;&nbsp; ✔ Secure Login &nbsp;&nbsp; ✔ Role-based dashboards
+        </div>
+      </div>
+
+      <!-- Right Card -->
+      <div class="card" style="padding:1.5rem;">
+        <h3 style="margin-bottom: .75rem;">What you can do</h3>
+        <div style="display:grid; gap:.75rem;">
+          <div class="card" style="padding:1rem;">
+            <strong>Patients</strong>
+            <div class="muted" style="margin-top:.25rem;">View prescriptions and order history</div>
+          </div>
+          <div class="card" style="padding:1rem;">
+            <strong>Doctors</strong>
+            <div class="muted" style="margin-top:.25rem;">Create and manage prescriptions</div>
+          </div>
+          <div class="card" style="padding:1rem;">
+            <strong>Pharmacists</strong>
+            <div class="muted" style="margin-top:.25rem;">Medicine inventory + orders</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="page">
+  <div class="container" style="padding: 3.5rem 0;">
+    <h2 style="font-size: 2rem; margin-bottom: .5rem;">Why PharmaCare?</h2>
+    <p class="muted" style="margin-bottom: 2rem;">Designed for university projects but structured like real software.</p>
+
+    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem;">
+      <div class="card" style="padding:1.5rem;">
+        <h3 style="margin-bottom:.5rem;">Role-Based Access</h3>
+        <p class="muted">Patient, Doctor, Pharmacist dashboards with correct permissions.</p>
+      </div>
+
+      <div class="card" style="padding:1.5rem;">
+        <h3 style="margin-bottom:.5rem;">Inventory Control</h3>
+        <p class="muted">Add medicines, track stock, detect low inventory items.</p>
+      </div>
+
+      <div class="card" style="padding:1.5rem;">
+        <h3 style="margin-bottom:.5rem;">Prescription Workflow</h3>
+        <p class="muted">Doctors create, patients retrieve, pharmacists validate and fulfill.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA (Improved) -->
+<section class="page" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0b1220 100%); color:white;">
+  <div class="container" style="padding: 4rem 0;">
+    <div class="card" style="background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.10); padding: 2rem;">
+      
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:1.25rem; flex-wrap:wrap;">
+        <div style="max-width: 650px;">
+          <h2 style="font-size: 2.1rem; margin-bottom:.6rem;">
+            Ready to manage your pharmacy smarter?
+          </h2>
+          <p style="opacity:.9; font-size: 1.05rem; margin-bottom: 1.25rem;">
+            Create an account and start using role-based dashboards for patients, doctors, and pharmacists.
+            Fast setup, clean UI, and secure authentication — built with Django (No DRF).
+          </p>
+
+          <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+            <a href="{% url 'signin' %}" class="btn btn-primary" style="padding:.85rem 1.25rem;">
+              Create account / Sign in
             </a>
-        </div>
-    </div>
+            <a href="{% url 'contact' %}" class="btn btn-outline"
+               style="padding:.85rem 1.25rem; background:transparent; border-color: rgba(255,255,255,.22); color:white;">
+              Contact Us
+            </a>
+          </div>
 
-    <div class="container">
-        <div class="features-grid">
-            <div class="feature-card">
-                <h3>Medicine Inventory</h3>
-                <p>Complete CRUD operations...</p>
-            </div>
-            <div class="feature-card">
-                <h3>Digital Prescriptions</h3>
-                <p>Doctors can create...</p>
-            </div>
-            <div class="feature-card">
-                <h3>Patient Orders</h3>
-                <p>Easy prescription retrieval...</p>
-            </div>
+          <div style="margin-top: 1rem; opacity:.85;">
+            ✔ Secure login &nbsp;&nbsp; ✔ Role-based access &nbsp;&nbsp; ✔ Inventory tracking
+          </div>
         </div>
-    </div>
 
-</div>
+        <div style="min-width: 260px;">
+          <div class="card" style="background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); padding: 1.25rem;">
+            <div class="muted" style="color:#cbd5e1; margin-bottom:.35rem;">Quick Start</div>
+            <ol style="margin:0; padding-left: 1.1rem; opacity:.92;">
+              <li>Create account</li>
+              <li>Login</li>
+              <li>Open your dashboard</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
 {% endblock %}

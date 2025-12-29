@@ -1,800 +1,474 @@
-let currentUser = null;
-let prescribedMedicines = [];
-let currentPrescription = null;
+(() => {
+  "use strict";
 
-// Initialize Data
-function initializeData() {
-    if (!localStorage.getItem('users')) {
-        const users = [
-            { email: 'admin@gmail.com', password: 'admin123', name: 'Admin User', role: 'pharmacist', nationalId: null },
-            { email: 'doctor@gmail.com', password: 'doctor123', name: 'Dr. Smith', role: 'doctor', nationalId: null },
-            { email: 'patient@gmail.com', password: 'patient123', name: 'John Patient', role: 'patient', nationalId: '123456' }
-        ];
-        localStorage.setItem('users', JSON.stringify(users));
+  // -----------------------------
+  // Helpers
+  // -----------------------------
+  const $ = (id) => document.getElementById(id);
+
+  function getCookie(name) {
+    const value = `; ${document.cookie || ""}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return null;
+  }
+
+  function getCsrfTokenFromDom() {
+    const el = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    return el ? el.value : null;
+  }
+
+  function getCsrfToken() {
+    return getCookie("csrftoken") || getCsrfTokenFromDom();
+  }
+
+  async function safeJson(res) {
+    const ct = (res.headers.get("content-type") || "").toLowerCase();
+    const txt = await res.text();
+    if (!txt) return null;
+    if (ct.includes("application/json")) {
+      try {
+        return JSON.parse(txt);
+      } catch {
+        return { raw: txt };
+      }
     }
-
-    if (!localStorage.getItem('medicines')) {
-        const medicines = [
-            { id: '1', name: 'Amoxicillin 500mg', category: 'Antibiotic', manufacturer: 'PharmaCorp', batchNumber: 'AMX-2024-001', expiryDate: '2025-12-31', price: 15.99, quantity: 150 },
-            { id: '2', name: 'Ibuprofen 200mg', category: 'Pain Relief', manufacturer: 'MediGen', batchNumber: 'IBU-2024-002', expiryDate: '2025-10-15', price: 8.50, quantity: 8 },
-            { id: '3', name: 'Paracetamol 500mg', category: 'Pain Relief', manufacturer: 'HealthPlus', batchNumber: 'PAR-2024-003', expiryDate: '2024-11-01', price: 6.99, quantity: 200 }
-        ];
-        localStorage.setItem('medicines', JSON.stringify(medicines));
-    }
-
-    if (!localStorage.getItem('prescriptions')) localStorage.setItem('prescriptions', JSON.stringify([]));
-    if (!localStorage.getItem('orders')) localStorage.setItem('orders', JSON.stringify([]));
-}
-
-initializeData();
-
-// Navigation
-function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(pageId).classList.add('active');
-}
-
-// function showAuth() {
-//     showPage('auth-page');
-// }
-
-function switchAuthTab(tab) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    event.target.classList.add('active');
-
-    if (tab === 'signin') {
-        document.getElementById('signin-content').classList.remove('hidden');
-        document.getElementById('signup-content').classList.add('hidden');
-    } else {
-        document.getElementById('signin-content').classList.add('hidden');
-        document.getElementById('signup-content').classList.remove('hidden');
-    }
-}
-
-function toggleNationalId() {
-    const role = document.getElementById('signup-role').value;
-    document.getElementById('national-id-group').style.display = role === 'patient' ? 'block' : 'none';
-}
-
-// Authentication
-async function handleSignIn(event) {
-    event.preventDefault();
-
-    const email = document.getElementById('signin-email').value;
-    const password = document.getElementById('signin-password').value;
-
-    const username = email.split('@')[0]; 
-
     try {
-        const response = await fetch("http://127.0.0.1:8000/api/login/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                username: username,
-                password: password
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            alert(data.error || "Login failed");
-            return;
-        }
-
-        currentUser = data.user;
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-
-        alert("Login successful!");
-
-        if (currentUser.role === 'pharmacist') {
-            showPage('pharmacist-dashboard');
-            loadPharmacistDashboard();
-        } else if (currentUser.role === 'doctor') {
-            showPage('doctor-dashboard');
-            loadDoctorDashboard();
-        } else if (currentUser.role === 'patient') {
-            showPage('patient-dashboard');
-            loadPatientDashboard();
-        }
-
-    } catch (error) {
-        alert("Network error");
+      return JSON.parse(txt);
+    } catch {
+      return { raw: txt };
     }
-}
+  }
 
-async function handleSignUp(event) {
-    event.preventDefault();
-
-    const name = document.getElementById('signup-name').value;
-    const email = document.getElementById('signup-email').value;
-    const password = document.getElementById('signup-password').value;
-    const role = document.getElementById('signup-role').value;
-    const nationalId = document.getElementById('signup-national-id').value;
-
-    const username = email.split('@')[0]; 
-
-    const data = {
-        username: username,
-        email: email,
-        password: password,
-        role: role,
-        national_id: nationalId
+  async function apiRequest(url, { method = "GET", body = null, headers = {} } = {}) {
+    const opts = {
+      method,
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/json",
+        ...headers,
+      },
     };
 
-    try {
-        const response = await fetch("http://127.0.0.1:8000/api/signup/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            alert("Account created successfully!");
-            switchAuthTab('signin');
-        } else {
-            alert("Error: " + JSON.stringify(result));
-        }
-
-    } catch (error) {
-        alert("Network Error");
+    if (body !== null && body !== undefined) {
+      opts.headers["Content-Type"] = "application/json";
+      opts.body = JSON.stringify(body);
     }
-}
 
-function logout() {
-    currentUser = null;
-    localStorage.removeItem('currentUser');
-    showPage('landing-page');
-}
+    const m = method.toUpperCase();
+    if (!["GET", "HEAD", "OPTIONS", "TRACE"].includes(m)) {
+      const csrf = getCsrfToken();
+      if (csrf) opts.headers["X-CSRFToken"] = csrf;
+    }
 
-// Utility Functions
-function generateId() {
-    return Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9);
-}
+    const res = await fetch(url, opts);
+    const data = await safeJson(res);
+    return { ok: res.ok, status: res.status, data };
+  }
 
-function generatePrescriptionNumber() {
-    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `RX-${date}-${random}`;
-}
+  function showError(prefix, status, data) {
+    const msg = data?.error || data?.detail || data?.raw || `${prefix} (${status})`;
+    alert(msg);
+  }
 
-function formatDate(dateString) {
-    return new Date(dateString).toLocaleDateString();
-}
+  function go(url) {
+    window.location.assign(url);
+  }
 
-// Pharmacist Dashboard
-function loadPharmacistDashboard() {
-    document.getElementById('pharmacist-name').textContent = currentUser.name;
-    loadMedicines();
-    loadUsers();
-    loadStats();
-    loadAllOrders();
-}
+  // -----------------------------
+  // AUTH (Signin/Signup page)
+  // -----------------------------
+  function setActiveTab(tab) {
+    const tabSignin = $("tab-signin");
+    const tabSignup = $("tab-signup");
+    const signin = $("signin-content");
+    const signup = $("signup-content");
 
-async function loadAllOrders() {
+    if (!signin || !signup) return;
+
+    const isSignup = tab === "signup";
+
+    signin.classList.toggle("hidden", isSignup);
+    signup.classList.toggle("hidden", !isSignup);
+
+    tabSignin && tabSignin.classList.toggle("active", !isSignup);
+    tabSignup && tabSignup.classList.toggle("active", isSignup);
+
+    if (isSignup) updateIdentifierUI();
+  }
+
+  function updateIdentifierUI() {
+    const role = ($("signup-role")?.value || "patient").toLowerCase();
+    const label = $("id-label");
+    const hint = $("id-hint");
+    const input = $("signup-identifier");
+
+    if (!label || !input) return;
+
+    if (role === "patient") {
+      label.textContent = "National ID";
+      input.placeholder = "Enter 10-digit National ID";
+      input.required = true;
+      input.dataset.kind = "national_id";
+      if (hint) hint.textContent = "Example: 0123456789 (10 digits)";
+    } else {
+      label.textContent = "Practice Code";
+      input.placeholder = "A-123456";
+      input.required = true;
+      input.dataset.kind = "practice_code";
+      if (hint) hint.textContent = "Format: A- followed by 6 digits (e.g., A-123456)";
+    }
+  }
+
+  async function handleSignIn(e) {
+    e.preventDefault();
+
+    const email = ($("signin-email")?.value || "").trim().toLowerCase();
+    const password = $("signin-password")?.value || "";
+
+    if (!email || !password) {
+      alert("Email and password are required");
+      return;
+    }
+
+    const btn = $("signin-form")?.querySelector('button[type="submit"]');
+    const oldText = btn ? btn.textContent : "";
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Signing in...";
+    }
+
     try {
-        const res = await fetch("http://127.0.0.1:8000/api/orders/");
-        const orders = await res.json();
+      const { ok, status, data } = await apiRequest("/api/login/", {
+        method: "POST",
+        body: { email, password },
+      });
 
-        const container = document.getElementById('all-orders');
+      if (!ok) {
+        showError("Login failed", status, data);
+        return;
+      }
 
-        if (!orders.length) {
-            container.innerHTML = `
-                <tr>
-                    <td colspan="4" style="text-align:center;">
-                        No orders found
-                    </td>
-                </tr>
-            `;
-            return;
-        }
+      const user = data?.user || data;
+      const role = (user?.role || "patient").toLowerCase();
 
-        container.innerHTML = orders.map(o => `
-            <tr>
-                <td>${o.id}</td>
-                <td>${o.patient_name}</td>
-                <td>$${o.total_amount}</td>
-                <td>${new Date(o.created_at).toLocaleDateString()}</td>
-            </tr>
-        `).join("");
+      if (role === "pharmacist" || role === "admin") go("/dashboard/pharmacist/");
+      else if (role === "doctor") go("/dashboard/doctor/");
+      else go("/dashboard/patient/");
     } catch (err) {
-        alert("Failed to load orders");
+      console.error(err);
+      alert("Network error");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = oldText || "Sign In";
+      }
     }
-}
+  }
 
-async function loadMedicines() {
+  async function handleSignUp(e) {
+    e.preventDefault();
+
+    const name = ($("signup-name")?.value || "").trim();
+    const email = ($("signup-email")?.value || "").trim().toLowerCase();
+    const password = $("signup-password")?.value || "";
+    const role = ($("signup-role")?.value || "patient").toLowerCase();
+
+    const identifier = ($("signup-identifier")?.value || "").trim();
+
+    if (!name || !email || !password) {
+      alert("Please fill name, email, password");
+      return;
+    }
+
+    if (role === "patient") {
+      if (!/^\d{10}$/.test(identifier)) {
+        alert("National ID must be exactly 10 digits");
+        return;
+      }
+    } else if (role === "doctor" || role === "pharmacist") {
+      if (!/^A-\d{6}$/.test(identifier)) {
+        alert("Practice Code must be like A-123456");
+        return;
+      }
+    } else {
+      alert("Invalid role");
+      return;
+    }
+
+    const btn = $("signup-form")?.querySelector('button[type="submit"]');
+    const oldText = btn ? btn.textContent : "";
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Creating...";
+    }
+
     try {
-        const response = await fetch("http://127.0.0.1:8000/api/medicines/");
-        const medicines = await response.json();
+      const payload = { name, email, password, role, identifier };
 
-        const tbody = document.getElementById('medicines-table');
-        
-        if (!medicines.length) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem">No medicines found</td></tr>`;
-            return;
-        }
+      const { ok, status, data } = await apiRequest("/api/signup/", {
+        method: "POST",
+        body: payload,
+      });
 
-        tbody.innerHTML = medicines.map(med => `
-            <tr>
-                <td>${med.name}</td>
-                <td>${med.category_name}</td>
-                <td>${med.batch_number}</td>
-                <td>${new Date(med.expiry_date).toLocaleDateString()}</td>
-                <td>$${med.price}</td>
-                <td>${med.stock}</td>
-                <td>
-                    <button onclick="editMedicine(${med.id})" class="btn" style="font-size:12px">Edit</button>
-                    <button onclick="deleteMedicine(${med.id})" class="btn" style="background:#ef4444; color:white; font-size:12px">Delete</button>
-                </td>
-            </tr>
-        `).join('');
+      if (!ok) {
+        showError("Signup failed", status, data);
+        return;
+      }
 
+      alert("Account created successfully! Please sign in.");
+      setActiveTab("signin");
+      $("signin-email") && ($("signin-email").value = email);
+      $("signin-password") && ($("signin-password").value = "");
+      $("signin-password")?.focus?.();
     } catch (err) {
-        alert("Error loading medicines");
+      console.error(err);
+      alert("Network error");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = oldText || "Create Account";
+      }
     }
-}
+  }
 
-function loadUsers() {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const tbody = document.getElementById('users-table');
-    
-    tbody.innerHTML = users.map(user => `
-        <tr>
-            <td>${user.name}</td>
-            <td>${user.email}</td>
-            <td><span class="badge badge-blue">${user.role}</span></td>
-            <td>${user.nationalId || 'N/A'}</td>
-        </tr>
-    `).join('');
-}
+  function initAuthPage() {
+    const signinForm = $("signin-form");
+    const signupForm = $("signup-form");
 
-function loadStats() {
-    const medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
-    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+    const tabSignin = $("tab-signin");
+    const tabSignup = $("tab-signup");
 
-    const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
-    const lowStockCount = medicines.filter(m => m.quantity < 10).length;
+    tabSignin && tabSignin.addEventListener("click", () => setActiveTab("signin"));
+    tabSignup && tabSignup.addEventListener("click", () => setActiveTab("signup"));
 
-    document.getElementById('total-revenue').textContent = `$${totalRevenue.toFixed(2)}`;
-    document.getElementById('total-orders').textContent = orders.length;
-    document.getElementById('total-medicines').textContent = medicines.length;
-    document.getElementById('low-stock-count').textContent = lowStockCount;
-}
+    signinForm && signinForm.addEventListener("submit", handleSignIn);
+    signupForm && signupForm.addEventListener("submit", handleSignUp);
 
-function showAddMedicine() {
-    document.getElementById('modal-title').textContent = 'Add Medicine';
-    document.getElementById('medicine-id').value = '';
-    document.getElementById('medicine-name').value = '';
-    document.getElementById('medicine-category').value = '';
-    document.getElementById('medicine-manufacturer').value = '';
-    document.getElementById('medicine-batch').value = '';
-    document.getElementById('medicine-expiry').value = '';
-    document.getElementById('medicine-price').value = '';
-    document.getElementById('medicine-quantity').value = '';
-    document.getElementById('medicine-modal').classList.add('active');
-}
+    $("signup-role")?.addEventListener("change", updateIdentifierUI);
 
-function closeMedicineModal() {
-    document.getElementById('medicine-modal').classList.remove('active');
-}
+    setActiveTab("signin");
+    updateIdentifierUI();
+  }
 
-async function saveMedicine(event) {
-    event.preventDefault();
+  // -----------------------------
+  // Pharmacist Dashboard (optional, safe)
+  // -----------------------------
+  let medicineCache = [];
 
-    const id = document.getElementById('medicine-id').value;
+  function normalizeList(data) {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.items)) return data.items;
+    if (Array.isArray(data.results)) return data.results;
+    return [];
+  }
 
-    const data = {
-        name: document.getElementById('medicine-name').value,
-        category: 1, 
-        manufacturer: document.getElementById('medicine-manufacturer').value,
-        batch_number: document.getElementById('medicine-batch').value,
-        expiry_date: document.getElementById('medicine-expiry').value,
-        price: document.getElementById('medicine-price').value,
-        stock: document.getElementById('medicine-quantity').value
+  async function loadMedicinesForPharmacist() {
+    const tbody = $("medicines-table");
+    if (!tbody) return;
+
+    const { ok, status, data } = await apiRequest("/api/medicines/");
+    if (!ok) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:1rem">Failed to load medicines</td></tr>`;
+      return;
+    }
+
+    medicineCache = normalizeList(data);
+
+    if (!medicineCache.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:1rem">No medicines found</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = medicineCache
+      .map((m) => {
+        const price = Number(m.price ?? 0);
+        const stock = m.stock ?? 0;
+        return `
+          <tr>
+            <td>${m.name ?? ""}</td>
+            <td>${m.category ?? ""}</td>
+            <td>${m.batch_number ?? ""}</td>
+            <td>${m.expiry_date ?? ""}</td>
+            <td>$${Number.isFinite(price) ? price.toFixed(2) : "0.00"}</td>
+            <td>${stock}</td>
+            <td>
+              <button class="btn btn-outline" type="button" onclick="editMedicine(${m.id})">Edit</button>
+              <button class="btn btn-outline" type="button" onclick="deleteMedicine(${m.id})">Delete</button>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+  }
+
+  window.showAddMedicine = function () {
+    const modal = $("medicine-modal");
+    if (!modal) return;
+
+    $("medicine-modal-title") && ($("medicine-modal-title").textContent = "Add Medicine");
+    $("medicine-save-btn") && ($("medicine-save-btn").textContent = "Save");
+
+    $("medicine-form")?.reset();
+    $("medicine-id") && ($("medicine-id").value = "");
+
+    modal.classList.add("active");
+    modal.setAttribute("aria-hidden", "false");
+    setTimeout(() => $("medicine-name")?.focus(), 0);
+  };
+
+  window.closeMedicineModal = function () {
+    const modal = $("medicine-modal");
+    if (!modal) return;
+    modal.classList.remove("active");
+    modal.setAttribute("aria-hidden", "true");
+  };
+
+  async function onMedicineSubmit(e) {
+    e.preventDefault();
+
+    const id = ($("medicine-id")?.value || "").trim();
+
+    const name = ($("medicine-name")?.value || "").trim();
+    const category = ($("medicine-category")?.value || "").trim();
+    const batch_number = ($("medicine-batch")?.value || "").trim();
+    const expiry_date = ($("medicine-expiry")?.value || "").trim();
+    const priceRaw = ($("medicine-price")?.value || "").trim();
+    const stockRaw = ($("medicine-stock")?.value || "").trim();
+    const notes = ($("medicine-notes")?.value || "").trim();
+
+    if (!name) return alert("Medicine name is required");
+    if (!expiry_date) return alert("Expiry date is required");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(expiry_date)) return alert("Expiry must be YYYY-MM-DD");
+
+    const payload = {
+      name,
+      category,
+      batch_number,
+      expiry_date,
+      price: priceRaw ? Number(priceRaw) : 0,
+      stock: stockRaw ? Number(stockRaw) : 0,
+      notes,
     };
 
-    let url = "http://127.0.0.1:8000/api/medicines/";
-    let method = "POST";
+    const method = id ? "PUT" : "POST";
+    const url = id ? `/api/medicines/${id}/` : "/api/medicines/";
 
-    if (id) {
-        url = `http://127.0.0.1:8000/api/medicines/${id}/`;
-        method = "PUT";
+    const { ok, status, data } = await apiRequest(url, { method, body: payload });
+    if (!ok) return showError("Save failed", status, data);
+
+    window.closeMedicineModal();
+    await loadMedicinesForPharmacist();
+  }
+
+  window.editMedicine = function (id) {
+    const m = (medicineCache || []).find((x) => String(x.id) === String(id));
+    if (!m) return;
+
+    const modal = $("medicine-modal");
+    if (!modal) return;
+
+    $("medicine-modal-title") && ($("medicine-modal-title").textContent = "Edit Medicine");
+    $("medicine-save-btn") && ($("medicine-save-btn").textContent = "Update");
+
+    $("medicine-id") && ($("medicine-id").value = m.id ?? "");
+    $("medicine-name") && ($("medicine-name").value = m.name ?? "");
+    $("medicine-category") && ($("medicine-category").value = m.category ?? "");
+    $("medicine-batch") && ($("medicine-batch").value = m.batch_number ?? "");
+    $("medicine-expiry") && ($("medicine-expiry").value = m.expiry_date ?? "");
+    $("medicine-price") && ($("medicine-price").value = m.price ?? "");
+    $("medicine-stock") && ($("medicine-stock").value = m.stock ?? "");
+    $("medicine-notes") && ($("medicine-notes").value = m.notes ?? "");
+
+    modal.classList.add("active");
+    modal.setAttribute("aria-hidden", "false");
+  };
+
+  window.deleteMedicine = async function (id) {
+    if (!confirm("Delete this medicine?")) return;
+
+    const { ok, status, data } = await apiRequest(`/api/medicines/${id}/`, { method: "DELETE" });
+    if (!ok) return showError("Delete failed", status, data);
+
+    await loadMedicinesForPharmacist();
+  };
+
+  function initPharmacistDashboard() {
+    const form = $("medicine-form");
+    if (form && !form.dataset.bound) {
+      form.addEventListener("submit", onMedicineSubmit);
+      form.dataset.bound = "1";
+    }
+    loadMedicinesForPharmacist();
+  }
+
+  // -----------------------------
+  // Doctor Dashboard (load medicines into table + select)
+  // -----------------------------
+  async function loadDoctorMedicines() {
+    const tbody = $("doctor-medicines-table");
+    const select = $("medicine-select");
+
+    if (!tbody && !select) return;
+
+    const { ok, status, data } = await apiRequest("/api/medicines/");
+    if (!ok) {
+      if (tbody) tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:1rem">Failed to load medicines</td></tr>`;
+      if (select) select.innerHTML = `<option value="">Failed to load</option>`;
+      return;
     }
 
-    const response = await fetch(url, {
-        method: method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-    });
+    const list = normalizeList(data);
 
-    if (response.ok) {
-        alert("Saved successfully!");
-        closeMedicineModal();
-        loadMedicines();
-    } else {
-        alert("Save failed!");
+    if (!list.length) {
+      if (tbody) tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:1rem">No medicines found</td></tr>`;
+      if (select) select.innerHTML = `<option value="">No medicines available</option>`;
+      return;
     }
-}
 
-async function editMedicine(id) {
-    const res = await fetch(`http://127.0.0.1:8000/api/medicines/${id}/`);
-    const med = await res.json();
-
-    document.getElementById('medicine-id').value = med.id;
-    document.getElementById('medicine-name').value = med.name;
-    document.getElementById('medicine-category').value = med.category_name;
-    document.getElementById('medicine-manufacturer').value = med.manufacturer;
-    document.getElementById('medicine-batch').value = med.batch_number;
-    document.getElementById('medicine-expiry').value = med.expiry_date;
-    document.getElementById('medicine-price').value = med.price;
-    document.getElementById('medicine-quantity').value = med.stock;
-
-    document.getElementById('modal-title').textContent = "Edit Medicine";
-    document.getElementById('medicine-modal').classList.add('active');
-}
-
-
-async function deleteMedicine(id) {
-    if (!confirm("Are you sure?")) return;
-
-    const response = await fetch(`http://127.0.0.1:8000/api/medicines/${id}/`, {
-        method: "DELETE"
-    });
-
-    if (response.ok) {
-        alert("Deleted!");
-        loadMedicines();
-    } else {
-        alert("Delete failed!");
+    if (tbody) {
+      tbody.innerHTML = list
+        .map(
+          (m) => `
+          <tr>
+            <td>${m.name || ""}</td>
+            <td>${m.category || ""}</td>
+            <td>${m.stock ?? 0}</td>
+          </tr>
+        `
+        )
+        .join("");
     }
-}
 
-// Doctor Dashboard
-function loadDoctorDashboard() {
-    document.getElementById('doctor-name').textContent = currentUser.name;
+    if (select) {
+      select.innerHTML =
+        `<option value="">Select a medicine...</option>` +
+        list
+          .map((m) => {
+            const stock = m.stock ?? 0;
+            const label = `${m.name || ""} - Stock: ${stock}`;
+            return `<option value="${m.id}">${label}</option>`;
+          })
+          .join("");
+    }
+  }
+
+  window.createPrescription = function (e) {
+    e.preventDefault();
+    alert("Prescription submit is not connected to backend yet.");
+  };
+
+  function initDoctorDashboard() {
     loadDoctorMedicines();
-}
-
-function loadDoctorMedicines() {
-    const medicines = JSON.parse(localStorage.getItem('medicines') || '[]').filter(m => m.quantity > 0);
-    
-    const select = document.getElementById('selected-medicine');
-    select.innerHTML = '<option value="">Choose a medicine</option>' + 
-        medicines.map(med => `<option value="${med.id}">${med.name} - Stock: ${med.quantity}</option>`).join('');
-    
-    const tbody = document.getElementById('doctor-medicines-table');
-    if (medicines.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 2rem; color: #6b7280;">No medicines found</td></tr>';
-        return;
-    }
-
-    tbody.innerHTML = medicines.map(med => `
-        <tr>
-            <td>
-                <div>${med.name}</div>
-                <div style="font-size: 0.75rem; color: #6b7280;">${med.manufacturer}</div>
-            </td>
-            <td>${med.category}</td>
-            <td><span class="badge ${med.quantity < 10 ? 'badge-red' : 'badge-blue'}">${med.quantity}</span></td>
-        </tr>
-    `).join('');
-}
-
-function searchMedicines() {
-    const query = document.getElementById('search-query').value.toLowerCase();
-    let medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
-    
-    if (query) {
-        medicines = medicines.filter(m => 
-            m.name.toLowerCase().includes(query) || 
-            m.manufacturer.toLowerCase().includes(query) ||
-            m.category.toLowerCase().includes(query)
-        );
-    }
-    
-    const tbody = document.getElementById('doctor-medicines-table');
-    if (medicines.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 2rem; color: #6b7280;">No medicines found</td></tr>';
-        return;
-    }
-
-    tbody.innerHTML = medicines.map(med => `
-        <tr>
-            <td>
-                <div>${med.name}</div>
-                <div style="font-size: 0.75rem; color: #6b7280;">${med.manufacturer}</div>
-            </td>
-            <td>${med.category}</td>
-            <td><span class="badge ${med.quantity < 10 ? 'badge-red' : 'badge-blue'}">${med.quantity}</span></td>
-        </tr>
-    `).join('');
-}
-
-function addMedicineToPrescription() {
-    const medicineId = document.getElementById('selected-medicine').value;
-    const dosage = document.getElementById('dosage').value;
-    const duration = document.getElementById('duration').value;
-    const quantity = parseInt(document.getElementById('quantity').value);
-
-    if (!medicineId || !dosage || !duration || !quantity) {
-        alert('Please fill all fields');
-        return;
-    }
-
-    const medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
-    const medicine = medicines.find(m => m.id === medicineId);
-
-    if (!medicine) {
-        alert('Medicine not found');
-        return;
-    }
-
-    if (quantity > medicine.quantity) {
-        alert(`Only ${medicine.quantity} units available in stock`);
-        return;
-    }
-
-    prescribedMedicines.push({
-        medicineId: medicine.id,
-        name: medicine.name,
-        dosage,
-        duration,
-        quantity
-    });
-
-    updatePrescribedMedicinesList();
-    
-    document.getElementById('selected-medicine').value = '';
-    document.getElementById('dosage').value = '';
-    document.getElementById('duration').value = '';
-    document.getElementById('quantity').value = '1';
-}
-
-function updatePrescribedMedicinesList() {
-    const listDiv = document.getElementById('prescribed-medicines-list');
-    const medicinesDiv = document.getElementById('prescribed-medicines');
-    
-    if (prescribedMedicines.length === 0) {
-        listDiv.classList.add('hidden');
-        return;
-    }
-
-    listDiv.classList.remove('hidden');
-    medicinesDiv.innerHTML = prescribedMedicines.map((med, index) => `
-        <div style="display: flex; justify-between; padding: 0.75rem; background: #f9fafb; border-radius: 0.5rem; margin-bottom: 0.5rem;">
-            <div>
-                <div style="font-weight: 500;">${med.name}</div>
-                <div style="font-size: 0.75rem; color: #6b7280;">${med.dosage} - ${med.duration} - Qty: ${med.quantity}</div>
-            </div>
-            <button onclick="removeMedicine(${index})" style="border: none; background: none; cursor: pointer; color: #ef4444;">Remove</button>
-        </div>
-    `).join('');
-}
-
-function removeMedicine(index) {
-    prescribedMedicines.splice(index, 1);
-    updatePrescribedMedicinesList();
-}
-
-async function createPrescription(event) {
-    event.preventDefault();
-
-    const nationalId = document.getElementById('patient-national-id').value;
-
-    if (!prescribedMedicines.length) {
-        alert("Please add at least one medicine");
-        return;
-    }
-
-    try {
-        const patient = await findPatientByNationalId(nationalId);
-
-        const items = prescribedMedicines.map(m => ({
-            medicine: m.medicineId,   // 🔑 مهم
-            dosage: m.dosage,
-            duration: m.duration,
-            quantity: m.quantity
-        }));
-
-        const body = {
-            doctor: currentUser.id,
-            patient: patient.id,
-            items: items
-        };
-
-        console.log("Prescription payload:", body); // 👈 حتماً ببین
-
-        const response = await fetch(
-            "http://127.0.0.1:8000/api/prescriptions/",
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            console.error(data);
-            alert("Failed to create prescription");
-            return;
-        }
-
-        alert("Prescription created successfully!");
-        prescribedMedicines = [];
-        updatePrescribedMedicinesList();
-        document.getElementById('patient-national-id').value = "";
-
-    } catch (err) {
-        alert(err.message);
-    }
-}
-
-async function findPatientByNationalId(nationalId) {
-    const res = await fetch(
-        `http://127.0.0.1:8000/api/patients/search/?national_id=${nationalId}`
-    );
-
-    if (!res.ok) {
-        throw new Error("Patient not found");
-    }
-
-    return await res.json();
-}
-
-// Patient Dashboard
-function loadPatientDashboard() {
-    document.getElementById('patient-name').textContent = currentUser.name;
-    loadPrescriptionHistory();
-    loadOrderHistory();
-}
-
-function searchPrescription(event) {
-    event.preventDefault();
-    
-    const prescriptionNumber = document.getElementById('prescription-number').value;
-    const prescriptions = JSON.parse(localStorage.getItem('prescriptions') || '[]');
-    const prescription = prescriptions.find(p => p.prescriptionNumber === prescriptionNumber);
-
-    if (!prescription) {
-        alert('Prescription not found');
-        document.getElementById('prescription-details').classList.add('hidden');
-        return;
-    }
-
-    if (prescription.patientId !== currentUser.email) {
-        alert('This prescription does not belong to you');
-        document.getElementById('prescription-details').classList.add('hidden');
-        return;
-    }
-
-    currentPrescription = prescription;
-    displayPrescription(prescription);
-}
-
-function updateOrderTotal() {
-    if (!currentPrescription) return;
-
-    const checkboxes = document.querySelectorAll('#prescription-medicines input[type="checkbox"]');
-    let newTotal = 0;
-    const medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
-    
-    checkboxes.forEach(checkbox => {
-        const index = parseInt(checkbox.dataset.index);
-        const prescribedMed = currentPrescription.medicines[index];
-        const medicine = medicines.find(m => m.id === prescribedMed.medicineId);
-        
-        if (checkbox.checked) {
-            if (medicine) {
-                newTotal += medicine.price * prescribedMed.quantity;
-            }
-        }
-    });
-
-    document.getElementById('order-total-amount').textContent = `$${newTotal.toFixed(2)}`;
-}
-
-function displayPrescription(prescription) {
-    const medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
-    
-    document.getElementById('doctor-name-display').textContent = prescription.doctorName;
-    document.getElementById('prescription-date').textContent = formatDate(prescription.createdAt);
-    document.getElementById('prescription-num-display').textContent = prescription.prescriptionNumber;
-
-    const tbody = document.getElementById('prescription-medicines');
-    
-    const rows = prescription.medicines.map((med, index) => {
-        const medicine = medicines.find(m => m.id === med.medicineId);
-        const price = medicine ? medicine.price : 0;
-        const total = price * med.quantity;
-        
-        med.isChecked = true;
-
-        return `
-            <tr data-index="${index}" data-price="${price}" data-quantity="${med.quantity}">
-                <td><input type="checkbox" checked onchange="updateOrderTotal()" data-index="${index}"></td>
-                <td>${med.name}</td>
-                <td>${med.dosage}</td>
-                <td>${med.duration}</td>
-                <td>${med.quantity}</td>
-                <td>$${price.toFixed(2)}</td>
-                <td class="item-total">$${total.toFixed(2)}</td>
-            </tr>
-        `;
-    }).join('');
-
-    tbody.innerHTML = rows + `
-        <tr style="font-weight: 700;">
-            <td colspan="6">Total Amount</td>
-            <td id="order-total-amount">$0.00</td>
-        </tr>
-    `;
-
-    document.getElementById('prescription-details').classList.remove('hidden');
-    updateOrderTotal();
-}
-
-async function placeOrder() {
-    if (!currentPrescription) {
-        alert("No prescription selected");
-        return;
-    }
-
-    try {
-        const response = await fetch(
-            "http://127.0.0.1:8000/api/orders/create/",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    prescription_id: currentPrescription.id,
-                    patient_id: currentUser.id
-                })
-            }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            alert(data.error || "Failed to place order");
-            return;
-        }
-
-        alert("Order placed successfully!");
-
-        document.getElementById('prescription-number').value = '';
-        document.getElementById('prescription-details').classList.add('hidden');
-        currentPrescription = null;
-
-        loadOrderHistory();
-
-        if (currentUser && currentUser.role === 'pharmacist') {
-            loadPharmacistDashboard();
-        }
-
-    } catch (error) {
-        alert("Network error while placing order");
-    }
-}
-
-async function loadPrescriptionHistory() {
-    const res = await fetch(
-        `http://127.0.0.1:8000/api/patients/${currentUser.id}/prescriptions/`
-    );
-
-    const prescriptions = await res.json();
-    const container = document.getElementById('prescription-history-list');
-
-    if (!prescriptions.length) {
-        container.innerHTML = "<p>No prescriptions found</p>";
-        return;
-    }
-
-    container.innerHTML = prescriptions.map(p => {
-        const isCompleted = p.status === 'completed';
-
-        return `
-            <div class="card" style="
-                opacity: ${isCompleted ? 0.6 : 1};
-                border-left: 5px solid ${isCompleted ? '#9ca3af' : '#22c55e'};
-            ">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3>${p.prescription_number}</h3>
-                    <span style="
-                        font-size: 0.75rem;
-                        padding: 0.25rem 0.5rem;
-                        border-radius: 9999px;
-                        background: ${isCompleted ? '#e5e7eb' : '#dcfce7'};
-                        color: ${isCompleted ? '#374151' : '#166534'};
-                    ">
-                        ${isCompleted ? 'Completed' : 'Active'}
-                    </span>
-                </div>
-
-                <p><strong>Doctor:</strong> ${p.doctor_name}</p>
-                <p><strong>Date:</strong> ${new Date(p.created_at).toLocaleDateString()}</p>
-
-                <div style="margin-top:0.5rem;">
-                    ${p.items.map(i => `
-                        <div style="font-size:0.875rem;">
-                            • ${i.medicine_name} — ${i.dosage} — Qty: ${i.quantity}
-                        </div>
-                    `).join("")}
-                </div>
-
-                <div style="margin-top:1rem; text-align:right;">
-                    <button
-                        class="btn btn-primary"
-                        ${isCompleted ? 'disabled style="background:#9ca3af; cursor:not-allowed;"' : ''}
-                        onclick="placeOrderFromHistory(${p.id})"
-                    >
-                        ${isCompleted ? 'Completed' : 'Place Order'}
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join("");
-}
-
-function placeOrderFromHistory(prescriptionId) {
-    const prescription = { id: prescriptionId };
-    currentPrescription = prescription;
-    placeOrder();
-}
-
-function loadOrderHistory() {
-    const orders = JSON.parse(localStorage.getItem('orders') || '[]').filter(o => o.patientId === currentUser.email);
-    const container = document.getElementById('order-history-list');
-
-    if (orders.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 2rem;">No orders found</p>';
-        return;
-    }
-
-    container.innerHTML = orders.map(order => `
-        <div class="card" style="margin-bottom: 1rem;">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h3 style="font-weight: 700;">Order #${order.id.slice(0, 8)}</h3>
-                    <p style="font-size: 0.875rem; color: #6b7280;">${formatDate(order.createdAt)}</p>
-                </div>
-                <div style="text-align: right;">
-                    <div style="font-size: 1.125rem; font-weight: 700;">$${order.totalAmount.toFixed(2)}</div>
-                    <span class="badge badge-green">${order.status}</span>
-                </div>
-            </div>
-            ${order.medicines.map(med => `
-                <div style="display: flex; justify-between; padding: 0.5rem; background: #f9fafb; border-radius: 0.5rem; margin-bottom: 0.5rem;">
-                    <span>${med.name}</span>
-                    <span style="font-size: 0.875rem; color: #6b7280;">Qty: ${med.quantity}</span>
-                </div>
-            `).join('')}
-        </div>
-    `).join('');
-}
-
-const storedUser = localStorage.getItem('currentUser');
-if (storedUser) {
-    currentUser = JSON.parse(storedUser);
-    switch(currentUser.role) {
-        case 'pharmacist':
-            showPage('pharmacist-dashboard');
-            loadPharmacistDashboard();
-            break;
-        case 'doctor':
-            showPage('doctor-dashboard');
-            loadDoctorDashboard();
-            break;
-        case 'patient':
-            showPage('patient-dashboard');
-            loadPatientDashboard();
-            break;
-    }
-}
+  }
+
+  // -----------------------------
+  // Boot
+  // -----------------------------
+  document.addEventListener("DOMContentLoaded", () => {
+    if ($("signin-form") || $("signup-form")) initAuthPage();
+    if ($("medicines-table")) initPharmacistDashboard();
+    if ($("doctor-medicines-table") || $("medicine-select")) initDoctorDashboard();
+  });
+})();

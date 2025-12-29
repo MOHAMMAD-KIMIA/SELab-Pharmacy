@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Contact Us | PharmaCare{% endblock %}
+
+{% block content %}
+<section class="page" style="background:#f8fafc;">
+  <div class="container" style="padding: 4rem 0; max-width: 900px;">
+
+    <div style="margin-bottom: 1.5rem;">
+      <h1 style="font-size: 2.25rem; margin-bottom: .5rem;">Contact Us</h1>
+      <p class="muted">If you have questions or want to collaborate, send us a message.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1.2fr .8fr; gap: 1.25rem;">
+      
+      <!-- FORM -->
+      <div class="card" style="padding: 1.5rem;">
+        <h3 style="margin-bottom: 1rem;">Send a message</h3>
+
+        <form method="post" action="">
+          {% csrf_token %}
+
+          <div class="input-group">
+            <label>Your Name</label>
+            <input name="name" type="text" placeholder="Your name" required>
+          </div>
+
+          <div class="input-group">
+            <label>Email</label>
+            <input name="email" type="email" placeholder="you@email.com" required>
+          </div>
+
+          <div class="input-group">
+            <label>Message</label>
+            <textarea name="message" rows="5" placeholder="Write your message..." required
+                      style="width:100%; padding:.75rem; border-radius:.75rem; border: 1px solid rgba(0,0,0,.12);"></textarea>
+          </div>
+
+          <button class="btn btn-primary" style="width:100%; margin-top:.5rem;">
+            Send
+          </button>
+
+          {% if success %}
+            <div style="margin-top:1rem; padding:.75rem; border-radius:.75rem; background:#ecfdf5; border:1px solid #86efac; color:#166534;">
+              Message sent successfully ✅
+            </div>
+          {% endif %}
+        </form>
+      </div>
+
+      <!-- INFO -->
+      <div class="card" style="padding: 1.5rem;">
+        <h3 style="margin-bottom: 1rem;">Our Info</h3>
+
+        <div style="display:grid; gap:.75rem;">
+          <div>
+            <div class="muted">Phone</div>
+            <a href="tel:+989123456789" style="text-decoration:none;">+98 912 345 6789</a>
+          </div>
+          <div>
+            <div class="muted">Email</div>
+            <a href="mailto:example@gmail.com" style="text-decoration:none;">example@gmail.com</a>
+          </div>
+          <div>
+            <div class="muted">Telegram</div>
+            <a href="https://t.me/YOUR_TELEGRAM" target="_blank" rel="noopener" style="text-decoration:none;">@YOUR_TELEGRAM</a>
+          </div>
+          <div>
+            <div class="muted">LinkedIn</div>
+            <a href="https://www.linkedin.com/in/YOUR_LINKEDIN" target="_blank" rel="noopener" style="text-decoration:none;">
+              /in/YOUR_LINKEDIN
+            </a>
+          </div>
+          <div>
+            <div class="muted">GitHub</div>
+            <a href="https://github.com/YOUR_GITHUB" target="_blank" rel="noopener" style="text-decoration:none;">
+              github.com/YOUR_GITHUB
+            </a>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.25rem;">
+          <a href="{% url 'signin' %}" class="btn btn-outline" style="width:100%; background:white; text-align:center; display:block;">
+            Go to Sign In
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
