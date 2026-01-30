@@ -18,32 +18,446 @@
                 <div>
                     <h2>Patient Portal</h2>
                     <p class="muted">Welcome, {{ request.user.username }}</p>
+                    <small style="color: #6b7280; font-size: 0.875rem;">
+                        National ID: {{ request.user.profile.national_id|default:"Not set" }}
+                    </small>
                 </div>
             </div>
             <a href="{% url 'logout' %}" class="btn btn-outline">Logout</a>
         </div>
     </div>
 
-    <div class="dashboard-content container" style="width:100vh">
+    <div class="dashboard-content container" style="max-width: 1200px; width: 100%;">
 
-        <div class="card">
-            <h2>Retrieve Prescription</h2>
-            <form onsubmit="searchPrescription(event)">
-                <input type="text" placeholder="Prescription ID" required>
-                <button class="btn btn-primary">Search</button>
-            </form>
+        <!-- Quick Stats Row -->
+        <div class="dashboard-stats-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
+            
+            <!-- Wallet Balance Card -->
+            <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h3 style="margin: 0 0 8px 0; color: white; font-size: 1.1rem; opacity: 0.9;">Wallet Balance</h3>
+                        <p id="wallet-balance" style="font-size: 2rem; font-weight: 700; margin: 0;">$0.00</p>
+                    </div>
+                    <div style="background: rgba(255, 255, 255, 0.2); padding: 12px; border-radius: 12px;">
+                        <svg style="width: 32px; height: 32px;" fill="none" stroke="white" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button onclick="showWalletHistory()" class="btn" style="flex: 1; background: white; color: #667eea; font-weight: 600;">
+                        History
+                    </button>
+                </div>
+            </div>
+
+            <!-- Prescription Stats -->
+            <div class="card" style="background: #f8fafc;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 1.1rem;">Active Prescriptions</h3>
+                        <p id="active-prescriptions-count" style="font-size: 2rem; font-weight: 700; margin: 0; color: #3b82f6;">0</p>
+                    </div>
+                    <div style="color: #3b82f6;">
+                        <svg style="width: 32px; height: 32px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div style="margin-top: 12px; font-size: 0.875rem; color: #64748b;">
+                    <span id="pending-orders-count">0 pending orders</span>
+                </div>
+            </div>
+
+            <!-- Order Stats -->
+            <div class="card" style="background: #f8fafc;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 1.1rem;">Total Orders</h3>
+                        <p id="total-orders-count" style="font-size: 2rem; font-weight: 700; margin: 0; color: #10b981;">0</p>
+                    </div>
+                    <div style="color: #10b981;">
+                        <svg style="width: 32px; height: 32px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div style="margin-top: 12px; font-size: 0.875rem; color: #64748b;">
+                    Total spent: <span id="total-spent-amount">$0.00</span>
+                </div>
+            </div>
         </div>
 
-        <div class="card">
-            <h2>Your Prescriptions</h2>
-            <div id="prescription-history-list"></div>
-        </div>
+        <!-- Main Content Grid -->
+        <div class="dashboard-main-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
+            
+            <!-- Left Column: Prescriptions & Orders -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                
+                <!-- Search Prescription Card -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h2 style="margin: 0;">Search Prescription by ID</h2>
+                        <small style="color: #6b7280;">Enter prescription ID to search</small>
+                    </div>
+                    <form onsubmit="searchPrescription(event)" style="margin-bottom: 0;">
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <input type="text" placeholder="Enter Prescription ID (e.g., RX-ABCD1234)" required 
+                                   style="flex: 1; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem;">
+                            <button type="submit" class="btn btn-primary" style="padding: 12px 24px; font-size: 1rem;">
+                                Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
 
-        <div class="card">
-            <h2>Order History</h2>
-            <div id="order-history-list"></div>
+                <!-- Prescriptions Section -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <h2 style="margin: 0 0 8px 0;">Your Prescriptions</h2>
+                            <p style="margin: 0; color: #6b7280; font-size: 0.95rem;">
+                                All active prescriptions assigned to your National ID
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <span id="prescription-count" class="badge badge-blue" style="font-size: 0.9rem;">Loading...</span>
+                            <button onclick="loadPatientPrescriptions()" class="btn btn-outline" style="padding: 8px 16px;">
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="prescription-history-list" style="min-height: 300px;">
+                        <!-- با JavaScript پر می‌شود -->
+                        <div style="text-align: center; padding: 40px; color: #6b7280;">
+                            <div class="loading-spinner" style="margin: 0 auto 20px;"></div>
+                            Loading your prescriptions...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order History Section -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <h2 style="margin: 0 0 8px 0;">Order History</h2>
+                            <p style="margin: 0; color: #6b7280; font-size: 0.95rem;">
+                                History of all your medication orders
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <span id="order-count" class="badge badge-blue" style="font-size: 0.9rem;">Loading...</span>
+                            <button onclick="loadOrderHistory()" class="btn btn-outline" style="padding: 8px 16px;">
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="order-history-list" style="min-height: 300px;">
+                        <!-- با JavaScript پر می‌شود -->
+                        <div style="text-align: center; padding: 40px; color: #6b7280;">
+                            <div class="loading-spinner" style="margin: 0 auto 20px;"></div>
+                            Loading order history...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Wallet & Quick Actions -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                
+                <!-- Wallet Management Card -->
+                <div class="card">
+                    <h2 style="margin: 0 0 20px 0; color: #1e293b;">Wallet Management</h2>
+                    
+                    <!-- Quick Add Funds -->
+                    <div style="margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 12px 0; font-size: 1rem; color: #475569;">Quick Add Funds</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                            <button onclick="addFunds(10)" class="btn btn-outline" style="padding: 12px; text-align: center;">
+                                <div style="font-size: 1.1rem; font-weight: 600; color: #059669;">$10</div>
+                                <div style="font-size: 0.8rem; color: #6b7280;">Add</div>
+                            </button>
+                            <button onclick="addFunds(25)" class="btn btn-outline" style="padding: 12px; text-align: center;">
+                                <div style="font-size: 1.1rem; font-weight: 600; color: #059669;">$25</div>
+                                <div style="font-size: 0.8rem; color: #6b7280;">Add</div>
+                            </button>
+                            <button onclick="addFunds(50)" class="btn btn-outline" style="padding: 12px; text-align: center;">
+                                <div style="font-size: 1.1rem; font-weight: 600; color: #059669;">$50</div>
+                                <div style="font-size: 0.8rem; color: #6b7280;">Add</div>
+                            </button>
+                            <button onclick="addFunds(100)" class="btn btn-outline" style="padding: 12px; text-align: center;">
+                                <div style="font-size: 1.1rem; font-weight: 600; color: #059669;">$100</div>
+                                <div style="font-size: 0.8rem; color: #6b7280;">Add</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Custom Amount -->
+                    <div style="margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 12px 0; font-size: 1rem; color: #475569;">Custom Amount</h3>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="custom-amount" placeholder="0.00" min="1" step="0.01"
+                                   style="flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem;">
+                            <button onclick="addCustomFunds()" class="btn btn-primary" style="padding: 12px 20px;">
+                                Add
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Wallet History Preview -->
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h3 style="margin: 0; font-size: 1rem; color: #475569;">Recent Transactions</h3>
+                            <button onclick="showWalletHistory()" class="btn btn-outline btn-sm" style="padding: 6px 12px; font-size: 0.85rem;">
+                                View All
+                            </button>
+                        </div>
+                        
+                        <div id="wallet-history-preview" style="min-height: 120px;">
+                            <!-- با JavaScript پر می‌شود -->
+                            <div style="text-align: center; padding: 20px; color: #6b7280;">
+                                <div class="loading-spinner" style="width: 20px; height: 20px; margin: 0 auto 10px;"></div>
+                                Loading transactions...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions Card -->
+                <div class="card">
+                    <h2 style="margin: 0 0 20px 0; color: #1e293b;">Quick Actions</h2>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <button onclick="showPaymentMethods()" class="btn btn-outline" style="text-align: left; padding: 14px; display: flex; align-items: center; gap: 12px;">
+                            <div style="background: #dbeafe; padding: 8px; border-radius: 8px; color: #3b82f6;">
+                                <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                </svg>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: #1e293b;">Payment Methods</div>
+                                <div style="font-size: 0.85rem; color: #6b7280;">Manage your payment options</div>
+                            </div>
+                        </button>
+
+                        <button onclick="showReceipts()" class="btn btn-outline" style="text-align: left; padding: 14px; display: flex; align-items: center; gap: 12px;">
+                            <div style="background: #dcfce7; padding: 8px; border-radius: 8px; color: #10b981;">
+                                <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: #1e293b;">Receipts & Invoices</div>
+                                <div style="font-size: 0.85rem; color: #6b7280;">View and download receipts</div>
+                            </div>
+                        </button>
+
+                        <button onclick="showSupport()" class="btn btn-outline" style="text-align: left; padding: 14px; display: flex; align-items: center; gap: 12px;">
+                            <div style="background: #fef3c7; padding: 8px; border-radius: 8px; color: #f59e0b;">
+                                <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                </svg>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: #1e293b;">Support Center</div>
+                                <div style="font-size: 0.85rem; color: #6b7280;">Need help? Contact support</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
 </div>
+
+<!-- Wallet Modal -->
+<div id="wallet-modal" class="modal" style="display: none;">
+    <div class="modal-backdrop" onclick="closeWalletModal()"></div>
+    <div class="modal-dialog" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 id="wallet-modal-title" class="modal-title">Add Funds to Wallet</h3>
+            <button type="button" class="btn btn-outline btn-sm" onclick="closeWalletModal()">✕</button>
+        </div>
+        <div class="modal-content" id="wallet-modal-content">
+            <!-- Modal content will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<style>
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .dashboard-main-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-stats-row {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-content.container {
+        padding: 0 15px;
+    }
+    
+    .card {
+        padding: 20px 15px;
+    }
+    
+    .dashboard-stats-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .flex.items-center.justify-between {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+
+/* Badge styles */
+.badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.badge-green { background: #dcfce7; color: #166534; }
+.badge-blue { background: #dbeafe; color: #1e40af; }
+.badge-red { background: #fee2e2; color: #991b1b; }
+.badge-yellow { background: #fef3c7; color: #92400e; }
+.badge-gray { background: #f3f4f6; color: #4b5563; }
+
+/* Loading spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border: 3px solid #f3f4f6;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Button styles */
+.btn {
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+.btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+.btn-outline {
+    background: white;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+.btn-outline:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+}
+
+/* Card styles */
+.card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 24px;
+    margin-bottom: 0;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Input styles */
+input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+input[type="text"]:focus, input[type="number"]:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Modal styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+.modal-dialog {
+    position: relative;
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.modal-title {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1e293b;
+}
+.modal-content {
+    min-height: 100px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'core/app/patient.js' %}"></script>
 {% endblock %}

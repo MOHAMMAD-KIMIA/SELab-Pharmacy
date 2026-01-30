@@ -66,18 +66,22 @@
             <div class="card card-span-2">
                 <div class="flex items-center justify-between" style="margin-bottom: 8px;">
                     <h2 style="margin: 0;">User Management</h2>
+                    <button type="button" class="btn btn-outline" onclick="loadUsers()">
+                        Refresh
+                    </button>
                 </div>
                 <div class="table-wrap">
                     <table>
                         <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>National ID</th>
-                        </tr>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>National ID / Practice Code</th>
+                            </tr>
                         </thead>
-                        <tbody id="users-table"></tbody>
+                        <tbody id="users-table">
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -86,18 +90,22 @@
             <div class="card card-span-2">
                 <div class="flex items-center justify-between" style="margin-bottom: 8px;">
                     <h2 style="margin: 0;">All Orders</h2>
+                    <button type="button" class="btn btn-outline" onclick="loadAllOrders()">
+                        Refresh
+                    </button>
                 </div>
                 <div class="table-wrap">
                     <table>
                         <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Patient</th>
-                            <th>Total Amount</th>
-                            <th>Date</th>
-                        </tr>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Patient</th>
+                                <th>Total Amount</th>
+                                <th>Date & Status</th>
+                            </tr>
                         </thead>
-                        <tbody id="all-orders"></tbody>
+                        <tbody id="all-orders">
+                        </tbody>
                     </table>
                 </div>
             </div>

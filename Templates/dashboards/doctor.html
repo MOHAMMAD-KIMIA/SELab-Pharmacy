@@ -30,6 +30,7 @@
       <h2>Create Prescription</h2>
 
       <form id="doctor-prescription-form">
+        {% csrf_token %}
         <div class="input-group">
           <label for="doctor-patient-national-id">Patient National ID</label>
           <input id="doctor-patient-national-id" type="text" placeholder="10 digits" required>
@@ -60,23 +61,388 @@
         </div>
 
         <button type="submit" class="btn btn-primary">Create Prescription</button>
+        <button type="button" id="refresh-medicines-btn" class="btn btn-outline" style="margin-left: 10px;">
+          Refresh Medicines
+        </button>
       </form>
+      
+      <div id="prescription-message" style="display: none; margin-top: 15px; padding: 10px; border-radius: 5px;"></div>
     </div>
 
     <div class="card">
-      <h2>Medicine Database</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Medicine</th>
-            <th>Category</th>
-            <th>Stock</th>
-          </tr>
-        </thead>
-        <tbody id="doctor-medicine-table"></tbody>
-      </table>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2 style="margin: 0;">Medicine Database</h2>
+        <span id="medicine-count" class="badge badge-blue">Loading...</span>
+      </div>
+      <div style="overflow-x: auto;">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Medicine</th>
+              <th>Category</th>
+              <th>Stock</th>
+              <th>Price</th>
+            </tr>
+          </thead>
+          <tbody id="doctor-medicine-table">
+            <tr>
+              <td colspan="4" style="text-align: center; padding: 20px; color: #6b7280;">
+                Loading medicines...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top: 15px; font-size: 12px; color: #6b7280; text-align: center;">
+        Last updated: <span id="last-updated">Never</span>
+      </div>
     </div>
 
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadMedicines() {
+    console.log('🔄 Loading medicines...');
+    
+    const tbody = document.getElementById('doctor-medicine-table');
+    const select = document.getElementById('doctor-medicine-select');
+    const countSpan = document.getElementById('medicine-count');
+    const lastUpdated = document.getElementById('last-updated');
+    
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" style="text-align: center; padding: 20px; color: #6b7280;">
+                    <div style="display: inline-block; width: 20px; height: 20px; border: 2px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px;"></div>
+                    Loading medicines...
+                </td>
+            </tr>
+        `;
+    }
+    
+    if (select) {
+        select.innerHTML = '<option value="">Loading medicines...</option>';
+        select.disabled = true;
+    }
+    
+    try {
+        const response = await fetch('/api/medicines/', {
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const medicines = await response.json();
+        console.log('Medicines received:', medicines);
+        
+        if (countSpan) {
+            countSpan.textContent = `${medicines.length} medicines`;
+        }
+        
+        if (lastUpdated) {
+            lastUpdated.textContent = new Date().toLocaleTimeString();
+        }
+        
+        if (tbody && medicines.length > 0) {
+            tbody.innerHTML = medicines.map(medicine => {
+                const stock = medicine.stock || 0;
+                const badgeClass = stock > 20 ? 'badge-green' : 
+                                  stock > 10 ? 'badge-blue' : 
+                                  stock > 5 ? 'badge-yellow' : 'badge-red';
+                
+                return `
+                    <tr>
+                        <td><strong>${medicine.name || 'Unnamed'}</strong></td>
+                        <td>${medicine.category || '-'}</td>
+                        <td><span class="badge ${badgeClass}">${stock}</span></td>
+                        <td>$${medicine.price ? parseFloat(medicine.price).toFixed(2) : '0.00'}</td>
+                    </tr>
+                `;
+            }).join('');
+        } else if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 20px; color: #6b7280;">
+                        No medicines available in database
+                    </td>
+                </tr>
+            `;
+        }
+        
+        if (select && medicines.length > 0) {
+            select.innerHTML = `
+                <option value="">Select a medicine...</option>
+                ${medicines.map(medicine => {
+                    const stock = medicine.stock || 0;
+                    const lowStock = stock < 10;
+                    return `
+                        <option value="${medicine.id}" ${lowStock ? 'style="color: #dc2626;"' : ''}>
+                            ${medicine.name || 'Unnamed'} (${medicine.category || 'No category'}) - Stock: ${stock}${lowStock ? ' ⚠️' : ''}
+                        </option>
+                    `;
+                }).join('')}
+            `;
+            select.disabled = false;
+        } else if (select) {
+            select.innerHTML = '<option value="">No medicines available</option>';
+            select.disabled = false;
+        }
+        
+        console.log('✅ Medicines loaded successfully');
+        return medicines;
+        
+    } catch (error) {
+        console.error('❌ Error loading medicines:', error);
+        
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 20px; color: #dc2626;">
+                        Error loading medicines: ${error.message}
+                    </td>
+                </tr>
+            `;
+        }
+        
+        if (select) {
+            select.innerHTML = '<option value="">Error loading medicines</option>';
+            select.disabled = false;
+        }
+        
+        throw error;
+    }
+}
+
+async function createPrescription(e) {
+    e.preventDefault();
+    console.log('📝 Creating prescription...');
+    
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    const messageDiv = document.getElementById('prescription-message');
+    
+    const patientId = document.getElementById('doctor-patient-national-id').value.trim();
+    const medicineSelect = document.getElementById('doctor-medicine-select');
+    const medicineId = medicineSelect.value;
+    const medicineText = medicineSelect.options[medicineSelect.selectedIndex]?.text || '';
+    const dosage = document.getElementById('doctor-dosage').value.trim() || '1 tablet daily';
+    const duration = document.getElementById('doctor-duration').value.trim() || '7 days';
+    const quantity = document.getElementById('doctor-qty').value;
+    
+    if (!patientId) {
+        alert('❌ Please enter Patient National ID');
+        return;
+    }
+    
+    if (!/^\d{10}$/.test(patientId)) {
+        alert('❌ Patient National ID must be 10 digits');
+        return;
+    }
+    
+    if (!medicineId) {
+        alert('❌ Please select a medicine');
+        return;
+    }
+    
+    if (!quantity || parseInt(quantity) < 1) {
+        alert('❌ Quantity must be at least 1');
+        return;
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating...';
+    
+    if (messageDiv) {
+        messageDiv.style.display = 'none';
+    }
+    
+    try {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        
+        const requestData = {
+            patient_national_id: patientId,
+            medicine_id: parseInt(medicineId),
+            dosage: dosage,
+            duration: duration,
+            quantity: parseInt(quantity),
+            notes: 'Prescribed by doctor'
+        };
+        
+        console.log('Sending prescription request:', requestData);
+        
+        const response = await fetch('/api/prescriptions/', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRFToken': csrfToken || ''
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        console.log('Response status:', response.status);
+        
+        let data;
+        try {
+            data = await response.json();
+        } catch (parseError) {
+            console.error('Failed to parse JSON:', parseError);
+            throw new Error('Invalid response from server');
+        }
+        
+        console.log('Response data:', data);
+        
+        if (!response.ok) {
+            throw new Error(data?.error || data?.detail || `Failed to create prescription (${response.status})`);
+        }
+        
+        const prescriptionId = data.prescription_id || data.data?.prescription_id || 'Unknown';
+        const medicineName = medicineText.split(' - ')[0] || medicineText.split(' (')[0] || 'Unknown Medicine';
+        
+        const successMessage = `✅ PRESCRIPTION CREATED SUCCESSFULLY!\n\n📋 Prescription Details:\n` +
+                              `• Prescription ID: ${prescriptionId}\n` +
+                              `• Patient National ID: ${patientId}\n` +
+                              `• Medicine: ${medicineName}\n` +
+                              `• Quantity: ${quantity}\n` +
+                              `• Dosage: ${dosage}\n` +
+                              `• Duration: ${duration}\n\n` +
+                              `📝 Tell the patient to use this Prescription ID:\n` +
+                              `🔸 ${prescriptionId}`;
+        
+        alert(successMessage);
+        
+        if (messageDiv) {
+            messageDiv.innerHTML = `
+                <div style="background: #d1fae5; color: #065f46; padding: 10px; border-radius: 5px; border: 1px solid #a7f3d0;">
+                    <strong>✅ Prescription Created!</strong><br>
+                    Prescription ID: <code>${prescriptionId}</code><br>
+                    Patient: ${patientId}<br>
+                    Medicine: ${medicineName}
+                </div>
+            `;
+            messageDiv.style.display = 'block';
+        }
+        
+        form.reset();
+        document.getElementById('doctor-qty').value = '1';
+        
+        setTimeout(() => {
+            loadMedicines();
+            console.log(' Medicines reloaded after prescription creation');
+        }, 1000);
+        
+    } catch (error) {
+        console.error('❌ Error creating prescription:', error);
+        
+        let errorMessage = `Failed to create prescription: ${error.message}`;
+        
+        if (error.message.includes('CSRF')) {
+            errorMessage = 'CSRF token error. Please refresh the page.';
+        } else if (error.message.includes('401') || error.message.includes('403')) {
+            errorMessage = 'Authentication error. Please make sure you are logged in as a doctor.';
+        } else if (error.message.includes('stock')) {
+            errorMessage = `Insufficient stock: ${error.message}`;
+        }
+        
+        alert(`❌ ${errorMessage}`);
+        
+        if (messageDiv) {
+            messageDiv.innerHTML = `
+                <div style="background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 5px; border: 1px solid #fecaca;">
+                    <strong>❌ Error!</strong><br>
+                    ${errorMessage}
+                </div>
+            `;
+            messageDiv.style.display = 'block';
+        }
+        
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log(' Doctor dashboard loaded');
+    
+    loadMedicines();
+    
+    const form = document.getElementById('doctor-prescription-form');
+    if (form) {
+        form.addEventListener('submit', createPrescription);
+        console.log('✅ Prescription form event listener added');
+    }
+    
+    const refreshBtn = document.getElementById('refresh-medicines-btn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            console.log(' Manual refresh');
+            loadMedicines();
+        });
+    }
+    
+    setInterval(() => {
+        console.log(' Auto-refreshing medicines...');
+        loadMedicines();
+    }, 30000);
+});
+
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.625rem;
+        border-radius: 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .badge-green { 
+        background: #dcfce7; 
+        color: #166534; 
+    }
+    
+    .badge-blue { 
+        background: #dbeafe; 
+        color: #1e40af; 
+    }
+    
+    .badge-red { 
+        background: #fee2e2; 
+        color: #991b1b; 
+    }
+    
+    .badge-yellow { 
+        background: #fef3c7; 
+        color: #92400e; 
+    }
+    
+    .badge-gray { 
+        background: #f3f4f6; 
+        color: #4b5563; 
+    }
+`;
+document.head.appendChild(style);
+
+window.loadMedicines = loadMedicines;
+window.createPrescription = createPrescription;
+console.log('✅ Doctor JavaScript loaded');
+</script>
 {% endblock %}
