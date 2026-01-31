@@ -59,40 +59,6 @@ class Prescription(models.Model):
             self.prescription_id = f"RX-{uuid.uuid4().hex[:8].upper()}"
         super().save(*args, **kwargs)
 
-class Order(models.Model):
-    ORDER_STATUS = [
-        ('pending', 'Pending'),
-        ('processing', 'Processing'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),
-    ]
-    
-    order_id = models.CharField(max_length=20, unique=True, blank=True)
-    patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
-    prescription = models.ForeignKey(Prescription, on_delete=models.SET_NULL, null=True, blank=True, related_name="orders")
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    status = models.CharField(max_length=20, choices=ORDER_STATUS, default='pending')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    def __str__(self):
-        return f"Order {self.order_id}"
-    
-    def save(self, *args, **kwargs):
-        if not self.order_id:
-            import uuid
-            self.order_id = f"ORD-{uuid.uuid4().hex[:8].upper()}"
-        super().save(*args, **kwargs)
-
-class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
-    medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=1)
-    price_at_time = models.DecimalField(max_digits=10, decimal_places=2)
-    
-    def __str__(self):
-        return f"{self.medicine.name} x{self.quantity}"
-
 class Wallet(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="wallet")
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -167,7 +133,7 @@ class Order(models.Model):
     ORDER_STATUS = [
         ('pending', 'Pending'),
         ('processing', 'Processing'),
-        ('completed', 'Completed'),
+        ('completed', 'Completed'),  # ✅ حروف کوچک
         ('cancelled', 'Cancelled'),
         ('failed', 'Failed - Insufficient Balance'),
     ]
@@ -175,8 +141,8 @@ class Order(models.Model):
     order_id = models.CharField(max_length=20, unique=True, blank=True)
     patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
     prescription = models.ForeignKey(Prescription, on_delete=models.SET_NULL, null=True, blank=True, related_name="orders")
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    status = models.CharField(max_length=20, choices=ORDER_STATUS, default='pending')
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=ORDER_STATUS, default='completed')  # ✅ حروف کوچک
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -188,27 +154,6 @@ class Order(models.Model):
             import uuid
             self.order_id = f"ORD-{uuid.uuid4().hex[:8].upper()}"
         super().save(*args, **kwargs)
-    
-    def process_payment(self):
-        """پردازش پرداخت از کیف پول بیمار"""
-        try:
-            wallet = self.patient.wallet
-            if wallet.deduct(self.total_amount):
-                self.status = 'completed'
-                self.save()
-                
-                for item in self.items.all():
-                    item.medicine.stock -= item.quantity
-                    item.medicine.save()
-                
-                return True
-            else:
-                self.status = 'failed'
-                self.save()
-                return False
-        except Exception as e:
-            print(f"Payment processing error: {e}")
-            return False
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")

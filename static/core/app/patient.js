@@ -252,69 +252,253 @@ async function refreshAllData() {
     }
 }
 
-
 async function loadOrderHistory() {
-    console.log(" Loading order history...");
+    console.log("📦 Loading order history from specialized API...");
     
     const container = $('order-history-list');
     if (!container) return;
     
     try {
-        const { ok, status, data } = await apiRequest('/api/orders/');
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+                <div class="loading-spinner" style="margin: 0 auto 20px;"></div>
+                <div>Loading your completed orders...</div>
+            </div>
+        `;
+        
+        // از API مخصوص Order History استفاده کن
+        const { ok, data } = await apiRequest('/api/patient/order-history/');
         
         if (!ok) {
-            throw new Error(data?.error || `Failed to load orders (${status})`);
+            // اگر API مخصوص کار نکرد، از API عمومی استفاده کن
+            console.log("⚠️ Specialized API failed, using general API");
+            return loadOrderHistoryFromGeneralAPI();
         }
         
-        const orders = data;
+        const orders = data || [];
         
-        if (!orders || orders.length === 0) {
-            container.innerHTML = `
-                <div style="text-align: center; padding: 20px; color: #6b7280; background: #f9fafb; border-radius: 8px;">
-                    No order history found
-                </div>
-            `;
+        if (orders.length === 0) {
+            showNoOrdersMessage(container);
             return;
         }
         
-        container.innerHTML = orders.map(order => `
-            <div class="order-card" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <div>
-                        <h4 style="margin: 0 0 4px 0; color: #1f2937;">Order #${order.order_id}</h4>
-                        <span class="badge ${order.status === 'completed' ? 'badge-green' : order.status === 'pending' ? 'badge-yellow' : order.status === 'cancelled' ? 'badge-red' : 'badge-blue'}" style="font-size: 0.75rem;">
-                            ${order.status}
-                        </span>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 0.875rem; color: #6b7280;">Total Amount</div>
-                        <div style="font-size: 1.25rem; font-weight: 700; color: #059669;">$${(order.total_amount || 0).toFixed(2)}</div>
-                    </div>
-                </div>
-                
-                <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 8px;">
-                    Prescription: <strong>${order.prescription_id || 'N/A'}</strong>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #6b7280;">
-                    <div>
-                        ${order.created_at ? `Ordered: ${new Date(order.created_at).toLocaleDateString()}` : ''}
-                    </div>
-                    <div>
-                        ${order.updated_at && order.status !== 'completed' ? `Updated: ${new Date(order.updated_at).toLocaleDateString()}` : ''}
-                    </div>
-                </div>
-            </div>
-        `).join('');
+        displayOrderHistory(orders, container);
         
     } catch (error) {
-        console.error('❌ Error loading order history:', error);
+        console.error('❌ Error:', error);
         container.innerHTML = `
-            <div style="text-align: center; padding: 20px; color: #dc2626; background: #fef2f2; border-radius: 8px;">
-                Error loading order history: ${error.message}
+            <div style="text-align: center; padding: 20px; color: #dc2626;">
+                Error: ${error.message}
             </div>
         `;
     }
+}
+
+// تابع پشتیبان اگر API مخصوص کار نکرد
+async function loadOrderHistoryFromGeneralAPI() {
+    const container = $('order-history-list');
+    const { ok, data } = await apiRequest('/api/orders/');
+    
+    if (!ok || !data) {
+        showNoOrdersMessage(container);
+        return;
+    }
+    
+    // فقط سفارش‌های completed را فیلتر کن
+    const completedOrders = data.filter(order => order.status === 'completed');
+    
+    if (completedOrders.length === 0) {
+        showNoOrdersMessage(container);
+        return;
+    }
+    
+    displayOrderHistory(completedOrders, container);
+}
+
+// تابع برای نمایش پیام عدم وجود سفارش
+function showNoOrdersMessage(container) {
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div style="text-align: center; padding: 60px 20px; color: #6b7280;">
+            <div style="font-size: 4rem; margin-bottom: 20px; color: #d1d5db;">📭</div>
+            <h3 style="margin: 0 0 12px 0; color: #374151; font-size: 1.5rem;">
+                No Completed Orders Yet
+            </h3>
+            <p style="margin: 0 0 24px 0; font-size: 1rem; max-width: 500px; margin: 0 auto 30px auto;">
+                You haven't completed any orders yet. When you place an order and it's completed, 
+                it will appear here with all prescription details.
+            </p>
+            <div style="display: inline-flex; gap: 10px;">
+                <button onclick="loadPatientPrescriptions()" class="btn btn-primary">
+                    View Active Prescriptions
+                </button>
+                <button onclick="loadOrderHistory()" class="btn btn-outline">
+                    Refresh
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// تابع اصلی برای نمایش تاریخچه سفارش‌ها
+function displayOrderHistory(orders, container) {
+    container.innerHTML = orders.map(order => {
+        const prescription = order.prescription || {};
+        const orderDate = order.created_at ? new Date(order.created_at) : new Date();
+        
+        return `
+            <div class="order-history-item" style="background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
+                
+                <!-- هدر -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #f3f4f6;">
+                    <div>
+                        <h3 style="margin: 0 0 8px 0; color: #1f2937; display: flex; align-items: center; gap: 10px;">
+                            <span style="color: #10b981;">✅</span>
+                            Order #${order.order_id}
+                        </h3>
+                        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                            <span style="font-size: 0.9rem; color: #6b7280;">
+                                📅 ${orderDate.toLocaleDateString()}
+                            </span>
+                            <span style="font-size: 0.9rem; color: #6b7280;">
+                                🕒 ${orderDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </span>
+                            <span style="font-size: 0.9rem; color: #059669; font-weight: 600;">
+                                💰 $${order.total_amount.toFixed(2)}
+                            </span>
+                        </div>
+                    </div>
+                    <span class="badge badge-green" style="font-size: 0.85rem; padding: 6px 12px;">
+                        Completed
+                    </span>
+                </div>
+                
+                <!-- بخش نسخه -->
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 16px 0; color: #374151; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #3b82f6;">💊</span> Prescription Information
+                    </h4>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                        <!-- ستون اول -->
+                        <div>
+                            <div style="margin-bottom: 12px;">
+                                <div style="font-size: 0.75rem; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">
+                                    Prescription ID
+                                </div>
+                                <div style="font-weight: 700; color: #3b82f6; font-family: monospace; font-size: 1rem;">
+                                    ${prescription.prescription_id || 'N/A'}
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div style="font-size: 0.75rem; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">
+                                    Medicine
+                                </div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 1.1rem;">
+                                    ${prescription.medicine?.name || prescription.medicine_name || 'Unknown'}
+                                </div>
+                                ${prescription.medicine?.category ? `
+                                    <div style="font-size: 0.85rem; color: #6b7280; margin-top: 2px;">
+                                        ${prescription.medicine.category}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        
+                        <!-- ستون دوم -->
+                        <div>
+                            <div style="margin-bottom: 12px;">
+                                <div style="font-size: 0.75rem; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">
+                                    Quantity & Dosage
+                                </div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 1.1rem;">
+                                    ${prescription.quantity || 1} units
+                                </div>
+                                <div style="font-size: 0.9rem; color: #4b5563; margin-top: 4px;">
+                                    ${prescription.dosage || 'Standard dosage'}
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div style="font-size: 0.75rem; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">
+                                    Duration
+                                </div>
+                                <div style="font-size: 0.9rem; color: #4b5563;">
+                                    ${prescription.duration || 'Not specified'}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ستون سوم -->
+                        <div>
+                            <div style="margin-bottom: 12px;">
+                                <div style="font-size: 0.75rem; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">
+                                    Prescribed By
+                                </div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem;">
+                                    Dr. ${prescription.doctor?.name || prescription.doctor_name || 'Unknown Doctor'}
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div style="font-size: 0.75rem; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">
+                                    Unit Price
+                                </div>
+                                <div style="font-weight: 600; color: #059669; font-size: 1rem;">
+                                    $${(prescription.medicine?.price_per_unit || prescription.unit_price || 0).toFixed(2)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notes اگر وجود دارد -->
+                    ${prescription.notes ? `
+                        <div style="background: #eff6ff; border-radius: 8px; padding: 16px; margin-top: 16px; border-left: 4px solid #3b82f6;">
+                            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                                <div style="color: #3b82f6; font-size: 1.2rem;">📝</div>
+                                <div>
+                                    <div style="font-size: 0.85rem; color: #3b82f6; font-weight: 600; margin-bottom: 6px;">
+                                        Doctor's Notes
+                                    </div>
+                                    <div style="font-size: 0.95rem; color: #1e40af; line-height: 1.5;">
+                                        ${prescription.notes}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <!-- خلاصه پرداخت -->
+                <div style="background: #f8fafc; border-radius: 8px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 4px;">
+                                Order Summary
+                            </div>
+                            <div style="font-size: 1rem; color: #1f2937;">
+                                ${prescription.quantity || 1} × $${(prescription.medicine?.price_per_unit || 0).toFixed(2)} = 
+                                <strong style="color: #059669; font-size: 1.2rem;">$${order.total_amount.toFixed(2)}</strong>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.85rem; color: #059669; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                                <span>✅</span> Payment Successful
+                            </div>
+                            <div style="font-size: 0.75rem; color: #6b7280; margin-top: 4px;">
+                                Transaction completed
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        `;
+    }).join('');
+    
+    console.log(`✅ Displayed ${orders.length} completed orders in history`);
 }
 
 async function searchPrescription(event) {

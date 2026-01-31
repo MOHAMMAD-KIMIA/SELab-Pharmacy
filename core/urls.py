@@ -27,5 +27,9 @@ urlpatterns = [
     path("api/wallet/transactions/", api_views.wallet_transactions_api, name="api_wallet_transactions"),
     path("api/revenue/total/", api_views.total_revenue_api, name="api_total_revenue"),
     path("api/patient/stats/", api_views.patient_stats_api, name="api_patient_stats"),
+    path("api/debug/simple-orders/", api_views.debug_simple_orders, name="api_debug_simple_orders"),
+    path("api/pharmacist/all-orders/", api_views.pharmacist_all_orders_api, name="api_pharmacist_all_orders"),
+    path("api/patient/order-history/", api_views.patient_order_history_api, name="api_patient_order_history"),
+
 
 ]
