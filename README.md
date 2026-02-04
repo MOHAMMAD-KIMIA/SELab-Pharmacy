@@ -52,7 +52,7 @@ SELab-Pharmacy/
 └── requirements.txt      # Python dependencies
 ```
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 ### Backend
 - **Framework**: Django 4.x (No DRF)
@@ -124,7 +124,7 @@ SELab-Pharmacy/
    - Default landing page: `http://localhost:8000/`
    - Admin panel: `http://localhost:8000/admin/`
 
-## 📖 Usage Guide
+##  Usage Guide
 
 ### User Registration & Login
 1. Navigate to the sign-in page
