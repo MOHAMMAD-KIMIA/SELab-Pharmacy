@@ -1,14 +1,12 @@
-// static/core/app/pharmacist.js
 "use strict";
 
-console.log("💊 Loading Pharmacist module...");
+console.log(" Loading Pharmacist module...");
 
 const Pharmacist = {
     medicineCache: [],
 
-    // بارگذاری داروها
     async loadMedicines() {
-        console.log("💊 Loading medicines for pharmacist dashboard...");
+        console.log(" Loading medicines for pharmacist dashboard...");
 
         const tbody = Utils.$("medicines-table");
         if (!tbody) return;
@@ -41,7 +39,6 @@ const Pharmacist = {
 
             tbody.innerHTML = this.medicineCache.map((m) => this.createMedicineRow(m)).join("");
             
-            // به‌روزرسانی آمار
             this.updateStats();
 
         } catch (error) {
@@ -56,7 +53,6 @@ const Pharmacist = {
         }
     },
 
-    // ایجاد ردیف دارو
     createMedicineRow(medicine) {
         const price = Number(medicine.price ?? 0);
         const stock = medicine.stock ?? 0;
@@ -81,12 +77,10 @@ const Pharmacist = {
         `;
     },
 
-    // ویرایش دارو
     editMedicine(id) {
         const medicine = this.medicineCache.find((x) => String(x.id) === String(id));
         if (!medicine) return;
 
-        // پر کردن فرم مودال
         Utils.$("medicine-id").value = medicine.id ?? "";
         Utils.$("medicine-name").value = medicine.name ?? "";
         Utils.$("medicine-category").value = medicine.category ?? "";
@@ -96,15 +90,12 @@ const Pharmacist = {
         Utils.$("medicine-stock").value = medicine.stock ?? "";
         Utils.$("medicine-notes").value = medicine.notes ?? "";
 
-        // تغییر عنوان مودال
         Utils.$("medicine-modal-title").textContent = "Edit Medicine";
         Utils.$("medicine-save-btn").textContent = "Update";
 
-        // نمایش مودال
         this.showMedicineModal();
     },
 
-    // حذف دارو
     async deleteMedicine(id) {
         if (!confirm("Delete this medicine?")) return;
 
@@ -125,7 +116,6 @@ const Pharmacist = {
         }
     },
 
-    // نمایش مودال دارو
     showMedicineModal() {
         const modal = Utils.$("medicine-modal");
         if (!modal) return;
@@ -135,7 +125,6 @@ const Pharmacist = {
         setTimeout(() => Utils.$("medicine-name")?.focus(), 0);
     },
 
-    // بستن مودال دارو
     closeMedicineModal() {
         const modal = Utils.$("medicine-modal");
         if (!modal) return;
@@ -144,7 +133,6 @@ const Pharmacist = {
         modal.setAttribute("aria-hidden", "true");
     },
 
-    // ذخیره دارو
     async saveMedicine(e) {
         e.preventDefault();
 
@@ -157,7 +145,6 @@ const Pharmacist = {
         const stock = (Utils.$("medicine-stock")?.value || "").trim();
         const notes = (Utils.$("medicine-notes")?.value || "").trim();
 
-        // اعتبارسنجی
         if (!name) {
             alert("Medicine name is required");
             return;
@@ -196,17 +183,13 @@ const Pharmacist = {
         }
     },
 
-    // به‌روزرسانی آمار
     updateStats() {
-        // محاسبه مجموع درآمد
         const totalRevenue = this.medicineCache.reduce((sum, med) => {
             return sum + (Number(med.price || 0) * Number(med.stock || 0));
         }, 0);
         
-        // شمارش داروهای با موجودی کم
         const lowStockCount = this.medicineCache.filter(med => Number(med.stock || 0) < 10).length;
 
-        // به‌روزرسانی UI
         if (Utils.$("total-revenue")) {
             Utils.$("total-revenue").textContent = `$${totalRevenue.toFixed(2)}`;
         }
@@ -220,21 +203,17 @@ const Pharmacist = {
         }
     },
 
-    // مقداردهی اولیه داشبورد داروساز
     init() {
         console.log("💊 Initializing Pharmacist Dashboard...");
 
-        // event listener فرم دارو
         const form = Utils.$("medicine-form");
         if (form && !form.dataset.bound) {
             form.addEventListener("submit", (e) => this.saveMedicine(e));
             form.dataset.bound = "1";
         }
 
-        // بارگذاری اولیه داروها
         this.loadMedicines();
 
-        // event listener برای دکمه Add Medicine
         const addBtn = document.querySelector('button[onclick*="showAddMedicine"]');
         if (addBtn) {
             addBtn.onclick = () => {
@@ -246,23 +225,20 @@ const Pharmacist = {
             };
         }
 
-        console.log("✅ Pharmacist Dashboard initialized");
+        console.log(" Pharmacist Dashboard initialized");
     }
 };
 
-// Export برای استفاده global
 window.Pharmacist = Pharmacist;
-console.log("✅ Pharmacist module loaded");
+console.log(" Pharmacist module loaded");
 
-// بخش User Management
 async function loadUsers() {
-    console.log("👥 Loading users...");
+    console.log(" Loading users...");
     
     const tbody = document.getElementById('users-table');
     if (!tbody) return;
     
     try {
-        // حالت loading
         tbody.innerHTML = `
             <tr>
                 <td colspan="4" style="text-align:center;padding:1rem">
@@ -278,7 +254,7 @@ async function loadUsers() {
         }
         
         const users = data;
-        console.log(`✅ Loaded ${users.length} users`);
+        console.log(` Loaded ${users.length} users`);
         
         if (users.length === 0) {
             tbody.innerHTML = `
@@ -291,7 +267,6 @@ async function loadUsers() {
             return;
         }
         
-        // پر کردن جدول
         tbody.innerHTML = users.map(user => `
             <tr>
                 <td>
@@ -326,8 +301,6 @@ async function loadUsers() {
     }
 }
 
-// بخش All Orders
-// در pharmacist.js - تغییر API endpoint
 async function loadAllOrders() {
     console.log("🔄 loadAllOrders() called - USING NEW ENDPOINT");
     
@@ -337,7 +310,6 @@ async function loadAllOrders() {
         return;
     }
     
-    // حالت loading
     tbody.innerHTML = `
         <tr>
             <td colspan="6" style="text-align:center;padding:2rem">
@@ -348,32 +320,30 @@ async function loadAllOrders() {
     `;
     
     try {
-        console.log("🌐 Fetching from NEW endpoint: /api/pharmacist/all-orders/");
+        console.log(" Fetching from NEW endpoint: /api/pharmacist/all-orders/");
         
-        // از API جدید استفاده کن
         const response = await fetch('/api/pharmacist/all-orders/', {
             method: 'GET',
-            credentials: 'same-origin',  // مهم: cookies را بفرست
+            credentials: 'same-origin', 
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             }
         });
         
-        console.log(`🌐 Response status: ${response.status}, OK: ${response.ok}`);
+        console.log(`Response status: ${response.status}, OK: ${response.ok}`);
         
         if (!response.ok) {
             const errorText = await response.text();
-            console.error("🌐 Response error:", errorText);
+            console.error(" Response error:", errorText);
             throw new Error(`HTTP ${response.status}`);
         }
         
         const orders = await response.json();
-        console.log(`✅ SUCCESS: Received ${orders.length} orders from new API`, orders);
+        console.log(` SUCCESS: Received ${orders.length} orders from new API`, orders);
         
-        // نمایش در کنسول
         orders.forEach((order, i) => {
-            console.log(`📦 [${i+1}] ${order.order_id} - ${order.patient_name} - $${order.total_amount} - ${order.status}`);
+            console.log(` [${i+1}] ${order.order_id} - ${order.patient_name} - $${order.total_amount} - ${order.status}`);
         });
         
         if (orders.length === 0) {
@@ -391,7 +361,6 @@ async function loadAllOrders() {
             return;
         }
         
-        // ایجاد جدول
         tbody.innerHTML = orders.map(order => {
             const medicineName = order.medicine_info?.name || 
                                order.prescription?.medicine_name || 
@@ -399,15 +368,14 @@ async function loadAllOrders() {
             
             const quantity = order.prescription?.quantity || 1;
             
-            // وضعیت
             let statusClass = 'badge-gray';
             let statusText = order.status;
             if (order.status === 'completed') {
                 statusClass = 'badge-green';
-                statusText = '✅ Completed';
+                statusText = ' Completed';
             } else if (order.status === 'pending') {
                 statusClass = 'badge-yellow';
-                statusText = '⏳ Pending';
+                statusText = ' Pending';
             }
             
             const date = order.created_at ? new Date(order.created_at) : new Date();
@@ -442,9 +410,8 @@ async function loadAllOrders() {
             `;
         }).join('');
         
-        console.log(`✅ Displayed ${orders.length} orders in table`);
+        console.log(` Displayed ${orders.length} orders in table`);
         
-        // به‌روزرسانی آمار
         updateRevenueStats(orders);
         
     } catch (error) {
@@ -479,19 +446,16 @@ async function loadAllOrders() {
 }
 
 function updateRevenueStats(orders) {
-    console.log("💰 updateRevenueStats called");
+    console.log(" updateRevenueStats called");
     
-    // فقط سفارش‌های completed
     const completedOrders = orders.filter(order => order.status === 'completed');
     const totalRevenue = completedOrders.reduce((sum, order) => sum + order.total_amount, 0);
     
-    // به‌روزرسانی فقط المان total-revenue
     const revenueElement = document.getElementById('total-revenue');
     if (revenueElement) {
         revenueElement.textContent = `$${totalRevenue.toFixed(2)}`;
         revenueElement.style.color = totalRevenue > 0 ? '#059669' : '#6b7280';
         
-        // اضافه کردن زیرنویس کوچک
         const existingSubtitle = revenueElement.nextElementSibling;
         if (!existingSubtitle || !existingSubtitle.classList.contains('revenue-subtitle')) {
             const subtitle = document.createElement('div');
@@ -508,11 +472,11 @@ function updateRevenueStats(orders) {
         }
     }
     
-    console.log(`💰 Revenue: $${totalRevenue.toFixed(2)} (${completedOrders.length} orders)`);
+    console.log(` Revenue: $${totalRevenue.toFixed(2)} (${completedOrders.length} orders)`);
 }
 
 async function loadMedicinesForPharmacist() {
-    console.log("💊 Loading medicines for pharmacist...");
+    console.log(" Loading medicines for pharmacist...");
     
     try {
         const response = await fetch('/api/medicines/', {
@@ -524,9 +488,8 @@ async function loadMedicinesForPharmacist() {
         
         if (response.ok) {
             const medicines = await response.json();
-            console.log(`💊 Loaded ${medicines.length} medicines`);
+            console.log(` Loaded ${medicines.length} medicines`);
             
-            // به‌روزرسانی آمار
             const medicinesElement = document.getElementById('total-medicines');
             const lowStockElement = document.getElementById('low-stock-count');
             
@@ -546,26 +509,22 @@ async function loadMedicinesForPharmacist() {
 }
 
 
-// اضافه کردن این توابع به init Pharmacist
 function initPharmacistDashboard() {
-    console.log("🚀 Initializing Pharmacist Dashboard");
+    console.log(" Initializing Pharmacist Dashboard");
     
-    // بارگذاری اولیه
     loadAllOrders();
     loadMedicinesForPharmacist();
     loadUsers();
     
-    // Auto-refresh هر 30 ثانیه
     setInterval(() => {
         console.log("🔄 Auto-refreshing pharmacist dashboard...");
         loadAllOrders();
     }, 30000);
     
-    // اضافه کردن event listener برای دکمه refresh
     const refreshBtn = document.getElementById('refresh-orders-btn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', loadAllOrders);
     }
     
-    console.log("✅ Pharmacist Dashboard initialized");
+    console.log(" Pharmacist Dashboard initialized");
 }

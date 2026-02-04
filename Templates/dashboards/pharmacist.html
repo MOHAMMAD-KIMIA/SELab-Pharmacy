@@ -28,7 +28,6 @@
     <!-- Content -->
     <div class="dashboard-content container">
 
-        <!-- بخش آمار بالا - Flexbox Grid -->
         <div class="stats-container" style="margin-bottom: 30px;">
             <div class="stats-header">
                 <h2 style="margin: 0;">Pharmacy Overview</h2>
@@ -36,7 +35,6 @@
             </div>
             
             <div class="stats-grid">
-                <!-- کارت درآمد -->
                 <div class="stat-card">
                     <div class="stat-card-header">
                         <div class="stat-icon" style="background: #d1fae5; color: #059669;">
@@ -46,7 +44,6 @@
                             </svg>
                         </div>
                         <button class="refresh-btn" onclick="loadAllOrders()" title="Refresh revenue">
-                            🔄
                         </button>
                     </div>
                     <div class="stat-title">Total Revenue</div>
@@ -54,7 +51,6 @@
                     <div class="stat-subtitle" id="revenue-subtitle">From 0 orders</div>
                 </div>
 
-                <!-- کارت تعداد داروها -->
                 <div class="stat-card">
                     <div class="stat-card-header">
                         <div class="stat-icon" style="background: #dbeafe; color: #3b82f6;">
@@ -64,7 +60,6 @@
                             </svg>
                         </div>
                         <button class="refresh-btn" onclick="loadMedicinesStats()" title="Refresh medicines">
-                            🔄
                         </button>
                     </div>
                     <div class="stat-title">Total Medicines</div>
@@ -72,7 +67,6 @@
                     <div class="stat-subtitle">In inventory</div>
                 </div>
 
-                <!-- کارت موجودی کم -->
                 <div class="stat-card">
                     <div class="stat-card-header">
                         <div class="stat-icon" style="background: #fef3c7; color: #f59e0b;">
@@ -82,7 +76,6 @@
                             </svg>
                         </div>
                         <button class="refresh-btn" onclick="loadMedicinesStats()" title="Refresh stock">
-                            🔄
                         </button>
                     </div>
                     <div class="stat-title">Low Stock Items</div>
@@ -92,9 +85,7 @@
             </div>
         </div>
 
-        <!-- بخش جداول پایین -->
         <div class="tables-container">
-            <!-- کارت داروها -->
             <div class="table-card">
                 <div class="table-card-header">
                     <h3 style="margin: 0;">Medicine Inventory</h3>
@@ -129,14 +120,13 @@
                 </div>
             </div>
 
-            <!-- کارت سفارشات -->
             <div class="table-card">
                 <div class="table-card-header">
                     <h3 style="margin: 0;">All Orders</h3>
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <span id="orders-count-badge" class="badge badge-blue">0 orders</span>
                         <button type="button" class="btn btn-outline" onclick="loadAllOrders()" id="refresh-orders-btn">
-                            🔄 Refresh
+                            Refresh
                         </button>
                     </div>
                 </div>
@@ -164,14 +154,13 @@
                 </div>
             </div>
 
-            <!-- کارت کاربران -->
             <div class="table-card">
                 <div class="table-card-header">
                     <h3 style="margin: 0;">User Management</h3>
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <span id="users-count-badge" class="badge badge-blue">0 users</span>
                         <button type="button" class="btn btn-outline" onclick="loadUsers()">
-                            🔄 Refresh
+                            Refresh
                         </button>
                     </div>
                 </div>
@@ -204,14 +193,12 @@
 {% include "modals/medicine_modal.html" %}
 
 <style>
-    /* Container اصلی */
     .dashboard-content.container {
         padding: 20px;
         max-width: 1400px;
         margin: 0 auto;
     }
     
-    /* بخش آمار */
     .stats-container {
         margin-bottom: 30px;
     }
@@ -241,7 +228,6 @@
         }
     }
     
-    /* کارت آمار */
     .stat-card {
         background: white;
         border-radius: 12px;
@@ -314,7 +300,6 @@
         margin-top: auto;
     }
     
-    /* بخش جداول */
     .tables-container {
         display: grid;
         grid-template-columns: 1fr;
@@ -350,7 +335,6 @@
         padding: 0;
     }
     
-    /* استایل‌های جدول */
     table {
         width: 100%;
         border-collapse: collapse;
@@ -385,7 +369,6 @@
         border-bottom: none;
     }
     
-    /* Badge استایل‌ها */
     .badge {
         display: inline-block;
         padding: 6px 12px;
@@ -425,7 +408,6 @@
         border: 1px solid #e5e7eb;
     }
     
-    /* دکمه‌ها */
     .btn {
         padding: 10px 18px;
         border-radius: 8px;
@@ -480,7 +462,6 @@
         100% { transform: rotate(360deg); }
     }
     
-    /* Responsive adjustments */
     @media (max-width: 1024px) {
         .table-card-header {
             flex-direction: column;
@@ -516,7 +497,6 @@
         }
     }
     
-    /* انیمیشن‌ها */
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }

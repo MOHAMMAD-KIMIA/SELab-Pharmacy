@@ -1,10 +1,8 @@
-// static/core/app/auth.js
 "use strict";
 
-console.log("🔐 Loading Auth module...");
+console.log(" Loading Auth module...");
 
 const Auth = {
-    // فعال‌سازی تب
     setActiveTab(tab) {
         const tabSignin = Utils.$("tab-signin");
         const tabSignup = Utils.$("tab-signup");
@@ -24,7 +22,6 @@ const Auth = {
         if (isSignup) this.updateIdentifierUI();
     },
 
-    // به‌روزرسانی UI شناسه
     updateIdentifierUI() {
         const role = (Utils.$("signup-role")?.value || "patient").toLowerCase();
         const label = Utils.$("id-label");
@@ -46,7 +43,6 @@ const Auth = {
         }
     },
 
-    // ورود
     async handleSignIn(e) {
         e.preventDefault();
 
@@ -93,7 +89,6 @@ const Auth = {
         }
     },
 
-    // ثبت‌نام
     async handleSignUp(e) {
         e.preventDefault();
 
@@ -108,7 +103,6 @@ const Auth = {
             return;
         }
 
-        // اعتبارسنجی شناسه
         if (!this.validateIdentifier(role, identifier)) {
             return;
         }
@@ -149,7 +143,6 @@ const Auth = {
         }
     },
 
-    // اعتبارسنجی شناسه
     validateIdentifier(role, identifier) {
         if (role === "patient") {
             if (!/^\d{10}$/.test(identifier)) {
@@ -168,9 +161,8 @@ const Auth = {
         return true;
     },
 
-    // مقداردهی اولیه صفحه auth
     init() {
-        console.log("🔐 Initializing Auth page...");
+        console.log(" Initializing Auth page...");
 
         const signinForm = Utils.$("signin-form");
         const signupForm = Utils.$("signup-form");
@@ -188,9 +180,9 @@ const Auth = {
         this.setActiveTab("signin");
         this.updateIdentifierUI();
 
-        console.log("✅ Auth page initialized");
+        console.log(" Auth page initialized");
     }
 };
 
 window.Auth = Auth;
-console.log("✅ Auth module loaded");
+console.log(" Auth module loaded");

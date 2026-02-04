@@ -10,7 +10,6 @@ const modules = [
     { name: "patient", file: "patient.js" }
 ];
 
-// تابع برای بارگذاری ماژول‌ها
 async function loadModules() {
     console.log(" Loading modules...");
     
@@ -95,8 +94,7 @@ function initializePage() {
     }
     
     else if (path.includes("/dashboard/patient/")) {
-        console.log("👤 Initializing Patient dashboard...");
-        // بعداً پیاده‌سازی می‌شود
+        console.log(" Initializing Patient dashboard...");
     }
     
     else {
@@ -105,14 +103,14 @@ function initializePage() {
 }
 
 document.addEventListener("DOMContentLoaded", async function() {
-    console.log("📄 DOM Content Loaded");
+    console.log(" DOM Content Loaded");
     
     try {
         await loadModules();
         
         setTimeout(initializePage, 100); 
     } catch (error) {
-        console.error("❌ Error initializing application:", error);
+        console.error(" Error initializing application:", error);
     }
 });
 

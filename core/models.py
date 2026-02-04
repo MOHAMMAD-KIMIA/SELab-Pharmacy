@@ -69,7 +69,6 @@ class Wallet(models.Model):
         return f"Wallet: {self.user.username} - ${self.balance}"
     
     def deduct(self, amount):
-        """کاهش موجودی کیف پول"""
         if self.balance >= amount:
             self.balance -= amount
             self.save()
@@ -77,13 +76,11 @@ class Wallet(models.Model):
         return False
     
     def add(self, amount):
-        """افزایش موجودی کیف پول"""
         self.balance += amount
         self.save()
         return True
     
     def deposit(self, amount, description="", reference_id="", metadata=None):
-        """افزایش موجودی کیف پول و ثبت تراکنش"""
         from django.db import transaction as db_transaction
         
         with db_transaction.atomic():
@@ -103,7 +100,6 @@ class Wallet(models.Model):
         return True
     
     def withdraw(self, amount, description="", reference_id="", metadata=None):
-        """کاهش موجودی کیف پول و ثبت تراکنش"""
         from django.db import transaction as db_transaction
         
         with db_transaction.atomic():
@@ -126,14 +122,13 @@ class Wallet(models.Model):
         return True
     
     def get_recent_transactions(self, limit=10):
-        """دریافت آخرین تراکنش‌ها"""
         return self.transactions.all().order_by('-created_at')[:limit]
     
 class Order(models.Model):
     ORDER_STATUS = [
         ('pending', 'Pending'),
         ('processing', 'Processing'),
-        ('completed', 'Completed'),  # ✅ حروف کوچک
+        ('completed', 'Completed'),  
         ('cancelled', 'Cancelled'),
         ('failed', 'Failed - Insufficient Balance'),
     ]
@@ -142,7 +137,7 @@ class Order(models.Model):
     patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
     prescription = models.ForeignKey(Prescription, on_delete=models.SET_NULL, null=True, blank=True, related_name="orders")
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=20, choices=ORDER_STATUS, default='completed')  # ✅ حروف کوچک
+    status = models.CharField(max_length=20, choices=ORDER_STATUS, default='completed')  
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

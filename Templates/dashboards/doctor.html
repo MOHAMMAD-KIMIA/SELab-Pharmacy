@@ -105,7 +105,7 @@
 {% block extra_js %}
 <script>
 async function loadMedicines() {
-    console.log('🔄 Loading medicines...');
+    console.log(' Loading medicines...');
     
     const tbody = document.getElementById('doctor-medicine-table');
     const select = document.getElementById('doctor-medicine-select');
@@ -198,11 +198,11 @@ async function loadMedicines() {
             select.disabled = false;
         }
         
-        console.log('✅ Medicines loaded successfully');
+        console.log(' Medicines loaded successfully');
         return medicines;
         
     } catch (error) {
-        console.error('❌ Error loading medicines:', error);
+        console.error(' Error loading medicines:', error);
         
         if (tbody) {
             tbody.innerHTML = `
@@ -225,7 +225,7 @@ async function loadMedicines() {
 
 async function createPrescription(e) {
     e.preventDefault();
-    console.log('📝 Creating prescription...');
+    console.log(' Creating prescription...');
     
     const form = e.target;
     const submitBtn = form.querySelector('button[type="submit"]');
@@ -241,22 +241,22 @@ async function createPrescription(e) {
     const quantity = document.getElementById('doctor-qty').value;
     
     if (!patientId) {
-        alert('❌ Please enter Patient National ID');
+        alert(' Please enter Patient National ID');
         return;
     }
     
     if (!/^\d{10}$/.test(patientId)) {
-        alert('❌ Patient National ID must be 10 digits');
+        alert(' Patient National ID must be 10 digits');
         return;
     }
     
     if (!medicineId) {
-        alert('❌ Please select a medicine');
+        alert(' Please select a medicine');
         return;
     }
     
     if (!quantity || parseInt(quantity) < 1) {
-        alert('❌ Quantity must be at least 1');
+        alert(' Quantity must be at least 1');
         return;
     }
     
@@ -311,14 +311,14 @@ async function createPrescription(e) {
         const prescriptionId = data.prescription_id || data.data?.prescription_id || 'Unknown';
         const medicineName = medicineText.split(' - ')[0] || medicineText.split(' (')[0] || 'Unknown Medicine';
         
-        const successMessage = `✅ PRESCRIPTION CREATED SUCCESSFULLY!\n\n📋 Prescription Details:\n` +
+        const successMessage = ` PRESCRIPTION CREATED SUCCESSFULLY!\n\n Prescription Details:\n` +
                               `• Prescription ID: ${prescriptionId}\n` +
                               `• Patient National ID: ${patientId}\n` +
                               `• Medicine: ${medicineName}\n` +
                               `• Quantity: ${quantity}\n` +
                               `• Dosage: ${dosage}\n` +
                               `• Duration: ${duration}\n\n` +
-                              `📝 Tell the patient to use this Prescription ID:\n` +
+                              ` Tell the patient to use this Prescription ID:\n` +
                               `🔸 ${prescriptionId}`;
         
         alert(successMessage);
@@ -326,7 +326,7 @@ async function createPrescription(e) {
         if (messageDiv) {
             messageDiv.innerHTML = `
                 <div style="background: #d1fae5; color: #065f46; padding: 10px; border-radius: 5px; border: 1px solid #a7f3d0;">
-                    <strong>✅ Prescription Created!</strong><br>
+                    <strong> Prescription Created!</strong><br>
                     Prescription ID: <code>${prescriptionId}</code><br>
                     Patient: ${patientId}<br>
                     Medicine: ${medicineName}
@@ -344,7 +344,7 @@ async function createPrescription(e) {
         }, 1000);
         
     } catch (error) {
-        console.error('❌ Error creating prescription:', error);
+        console.error(' Error creating prescription:', error);
         
         let errorMessage = `Failed to create prescription: ${error.message}`;
         
@@ -356,12 +356,12 @@ async function createPrescription(e) {
             errorMessage = `Insufficient stock: ${error.message}`;
         }
         
-        alert(`❌ ${errorMessage}`);
+        alert(` ${errorMessage}`);
         
         if (messageDiv) {
             messageDiv.innerHTML = `
                 <div style="background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 5px; border: 1px solid #fecaca;">
-                    <strong>❌ Error!</strong><br>
+                    <strong> Error!</strong><br>
                     ${errorMessage}
                 </div>
             `;
@@ -382,7 +382,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('doctor-prescription-form');
     if (form) {
         form.addEventListener('submit', createPrescription);
-        console.log('✅ Prescription form event listener added');
+        console.log(' Prescription form event listener added');
     }
     
     const refreshBtn = document.getElementById('refresh-medicines-btn');

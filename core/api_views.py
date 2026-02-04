@@ -258,7 +258,6 @@ def medicine_detail_api(request, pk):
         medicine.delete()
         return JsonResponse({"ok": True, "message": "Medicine deleted"}, status=200)
 
-    # PUT - Update medicine
     data = _json(request)
     if data is None:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
@@ -370,16 +369,14 @@ def prescriptions_api(request):
 @login_required
 def orders_api(request):
     """Orders API با اطلاعات کامل نسخه"""
-    print(f"📦 ORDERS API with full prescription info")
+    print(f" ORDERS API with full prescription info")
     
-    # تعیین نقش
     try:
         profile = request.user.profile
         role = profile.role
     except:
         role = "patient"
     
-    # گرفتن سفارش‌ها
     if role in ["pharmacist", "admin"]:
         orders = Order.objects.all().order_by("-created_at")
     else:
@@ -399,7 +396,6 @@ def orders_api(request):
             "updated_at": order.updated_at.isoformat(),
         }
         
-        # اطلاعات کامل نسخه
         if order.prescription:
             order_data["prescription"] = {
                 "id": order.prescription.id,
@@ -418,14 +414,12 @@ def orders_api(request):
                 "created_at": order.prescription.created_at.isoformat() if order.prescription.created_at else None,
             }
             
-            # اطلاعات دارو
             order_data["medicine_info"] = {
                 "name": order.prescription.medicine.name,
                 "category": order.prescription.medicine.category,
                 "price": float(order.prescription.medicine.price),
             }
         
-        # اطلاعات آیتم‌ها
         items_list = []
         try:
             for item in order.items.all():
@@ -441,23 +435,21 @@ def orders_api(request):
         order_data["items"] = items_list
         response_data.append(order_data)
     
-    print(f"📦 Returning {len(response_data)} orders with prescription details")
+    print(f" Returning {len(response_data)} orders with prescription details")
     return JsonResponse(response_data, safe=False, status=200)
 
 @require_http_methods(["GET"])
 @login_required
 def patient_order_history_api(request):
     """API مخصوص Order History بیمار با اطلاعات کامل"""
-    print(f"📋 PATIENT ORDER HISTORY API for {request.user.username}")
+    print(f" PATIENT ORDER HISTORY API for {request.user.username}")
     
-    # فقط بیماران می‌توانند دسترسی داشته باشند
     try:
         if request.user.profile.role != 'patient':
             return JsonResponse({"error": "Only patients can view order history"}, status=403)
     except:
         return JsonResponse({"error": "Patient profile not found"}, status=403)
     
-    # فقط سفارش‌های completed بیمار
     orders = Order.objects.filter(
         patient=request.user,
         status='completed'
@@ -474,9 +466,7 @@ def patient_order_history_api(request):
             "payment_status": "completed",
         }
         
-        # اطلاعات کامل نسخه
         if order.prescription:
-            # اطلاعات نسخه
             order_data["prescription"] = {
                 "prescription_id": order.prescription.prescription_id,
                 "medicine": {
@@ -495,7 +485,6 @@ def patient_order_history_api(request):
                 "total_price": float(order.prescription.medicine.price * order.prescription.quantity),
             }
             
-            # اطلاعات سفارش
             order_data["order_details"] = {
                 "medicine_quantity": order.prescription.quantity,
                 "unit_price": float(order.prescription.medicine.price),
@@ -505,7 +494,7 @@ def patient_order_history_api(request):
         
         response_data.append(order_data)
     
-    print(f"📋 Returning {len(response_data)} completed orders for patient")
+    print(f" Returning {len(response_data)} completed orders for patient")
     return JsonResponse(response_data, safe=False, status=200)
 
 @require_http_methods(["GET"])
@@ -513,30 +502,26 @@ def patient_order_history_api(request):
 def pharmacist_all_orders_api(request):
     """API برای داروساز - همیشه همه سفارش‌ها را برمی‌گرداند"""
     print("=" * 60)
-    print("💊 PHARMACIST ALL ORDERS API CALLED")
-    print(f"💊 User: {request.user.username} (ID: {request.user.id})")
+    print(" PHARMACIST ALL ORDERS API CALLED")
+    print(f" User: {request.user.username} (ID: {request.user.id})")
     
-    # بررسی نقش
     try:
         profile = request.user.profile
         role = profile.role
-        print(f"💊 User role: {role}")
+        print(f" User role: {role}")
     except:
         role = "patient"
-        print(f"💊 No profile found")
+        print(f" No profile found")
     
-    # حتی اگر نقش pharmacist نبود، باز هم داده برگردان (برای تست)
     from .models import Order
     orders = Order.objects.all().order_by('-created_at')
     
-    print(f"💊 Total orders in database: {orders.count()}")
+    print(f" Total orders in database: {orders.count()}")
     
-    # نمایش لاگ همه سفارش‌ها
     for i, order in enumerate(orders):
         patient_name = order.patient.username if order.patient else "None"
-        print(f"💊 Order {i+1}: ID={order.id}, OrderID={order.order_id}, Patient={patient_name}, Status={order.status}, Total=${order.total_amount}")
+        print(f" Order {i+1}: ID={order.id}, OrderID={order.order_id}, Patient={patient_name}, Status={order.status}, Total=${order.total_amount}")
     
-    # ساخت response
     response_data = []
     for order in orders:
         order_data = {
@@ -556,7 +541,6 @@ def pharmacist_all_orders_api(request):
             }
         }
         
-        # اطلاعات نسخه
         if order.prescription:
             order_data["prescription"] = {
                 "prescription_id": order.prescription.prescription_id,
@@ -571,7 +555,7 @@ def pharmacist_all_orders_api(request):
         
         response_data.append(order_data)
     
-    print(f"💊 Returning {len(response_data)} orders")
+    print(f" Returning {len(response_data)} orders")
     print("=" * 60)
     
     return JsonResponse(response_data, safe=False, status=200)
@@ -579,16 +563,12 @@ def pharmacist_all_orders_api(request):
 @require_http_methods(["GET"])
 @login_required
 def total_revenue_api(request):
-    """دریافت درآمد کل (فقط برای داروسازان)"""
     prof = getattr(request.user, "profile", None)
     role = getattr(prof, "role", "patient") if prof else "patient"
     
     if role not in ["pharmacist", "admin"]:
         return JsonResponse({"error": "Forbidden"}, status=403)
-    
-    # اضافه کردن import django.db.models در بالای فایل اگر وجود ندارد
-    # from django.db.models import Sum
-    
+        
     total_revenue = Order.objects.filter(status='completed').aggregate(
         total=models.Sum('total_amount')
     )['total'] or Decimal('0.00')
@@ -604,7 +584,6 @@ def total_revenue_api(request):
 @require_http_methods(["GET"])
 @login_required
 def wallet_balance_api(request):
-    """دریافت موجودی کیف پول کاربر"""
     try:
         wallet, created = Wallet.objects.get_or_create(user=request.user)
         
@@ -624,7 +603,6 @@ def wallet_balance_api(request):
 @require_http_methods(["GET"])
 @login_required
 def wallet_transactions_api(request):
-    """دریافت تاریخچه تراکنش‌های واقعی کیف پول"""
     try:
         wallet, created = Wallet.objects.get_or_create(user=request.user)
         
@@ -681,7 +659,6 @@ def wallet_transactions_api(request):
 @require_http_methods(["POST"])
 @login_required
 def wallet_deposit_api(request):
-    """شارژ کیف پول"""
     data = _json(request)
     if data is None:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
@@ -733,7 +710,6 @@ def wallet_deposit_api(request):
 @require_http_methods(["GET"])
 @login_required
 def patient_prescriptions_api(request):
-    """دریافت فقط نسخه‌های ACTIVE بیمار"""
     prof = getattr(request.user, "profile", None)
     
     if not prof or prof.role != 'patient':
@@ -782,7 +758,6 @@ def patient_prescriptions_api(request):
 @require_http_methods(["POST"])
 @login_required
 def create_order_api(request):
-    """ایجاد سفارش جدید با پرداخت از کیف پول"""
     prof = getattr(request.user, "profile", None)
     
     if not prof or prof.role != 'patient':
@@ -797,29 +772,25 @@ def create_order_api(request):
     if not prescription_id:
         return JsonResponse({"error": "Prescription ID is required"}, status=400)
     
-    print(f"🎯 DEBUG: Creating order for prescription: {prescription_id}, user: {request.user.username}")
+    print(f" DEBUG: Creating order for prescription: {prescription_id}, user: {request.user.username}")
     
     try:
-        # 1. پیدا کردن نسخه
         prescription = Prescription.objects.get(
             prescription_id=prescription_id,
             patient_national_id=prof.national_id,
             status='active'
         )
         
-        print(f"✅ DEBUG: Found prescription ID: {prescription.id}, Medicine: {prescription.medicine.name}")
+        print(f" DEBUG: Found prescription ID: {prescription.id}, Medicine: {prescription.medicine.name}")
         
-        # 2. بررسی موجودی
         if prescription.medicine.stock < prescription.quantity:
             return JsonResponse({"error": f"Insufficient stock. Available: {prescription.medicine.stock}"}, status=400)
         
-        # 3. محاسبه مبلغ
         total_amount = prescription.medicine.price * prescription.quantity
-        print(f"💰 DEBUG: Total amount: {total_amount}, Quantity: {prescription.quantity}, Price per unit: {prescription.medicine.price}")
+        print(f" DEBUG: Total amount: {total_amount}, Quantity: {prescription.quantity}, Price per unit: {prescription.medicine.price}")
         
-        # 4. بررسی کیف پول
         wallet, created = Wallet.objects.get_or_create(user=request.user)
-        print(f"👛 DEBUG: Wallet balance: {wallet.balance}, required: {total_amount}")
+        print(f" DEBUG: Wallet balance: {wallet.balance}, required: {total_amount}")
         
         if wallet.balance < total_amount:
             return JsonResponse({
@@ -832,13 +803,11 @@ def create_order_api(request):
         from django.db import transaction as db_transaction
         
         with db_transaction.atomic():
-            # 5. کسر از کیف پول
             old_balance = wallet.balance
             wallet.balance -= total_amount
             wallet.save()
-            print(f"👛 DEBUG: Wallet updated. Old: {old_balance}, New: {wallet.balance}")
+            print(f" DEBUG: Wallet updated. Old: {old_balance}, New: {wallet.balance}")
             
-            # 6. ایجاد تراکنش
             txn = Transaction.objects.create(
                 wallet=wallet,
                 type='withdrawal',
@@ -854,9 +823,8 @@ def create_order_api(request):
                     "patient_id": request.user.id
                 }
             )
-            print(f"💳 DEBUG: Transaction created: {txn.transaction_id}, Amount: {txn.amount}")
+            print(f" DEBUG: Transaction created: {txn.transaction_id}, Amount: {txn.amount}")
             
-            # 7. ایجاد سفارش - با جزئیات بیشتر
             order = Order.objects.create(
                 patient=request.user,
                 prescription=prescription, 
@@ -864,37 +832,32 @@ def create_order_api(request):
                 status='completed'
             )
             order.save()
-            print(f"📦 DEBUG: Order created! Order ID: {order.order_id}, Status: {order.status}")
-            print(f"📦 DEBUG: Order patient: {order.patient.username}, Prescription: {order.prescription.prescription_id if order.prescription else 'None'}")
+            print(f" DEBUG: Order created! Order ID: {order.order_id}, Status: {order.status}")
+            print(f" DEBUG: Order patient: {order.patient.username}, Prescription: {order.prescription.prescription_id if order.prescription else 'None'}")
             
-            # 8. ایجاد آیتم سفارش
             OrderItem.objects.create(
                 order=order,
                 medicine=prescription.medicine,
                 quantity=prescription.quantity,
                 price_at_time=prescription.medicine.price
             )
-            print(f"📋 DEBUG: Order item created: {prescription.medicine.name} x {prescription.quantity}")
+            print(f" DEBUG: Order item created: {prescription.medicine.name} x {prescription.quantity}")
             
-            # 9. کاهش موجودی دارو
             old_stock = prescription.medicine.stock
             prescription.medicine.stock -= prescription.quantity
             prescription.medicine.save()
-            print(f"💊 DEBUG: Medicine stock updated: {prescription.medicine.name}, Old: {old_stock}, New: {prescription.medicine.stock}")
+            print(f" DEBUG: Medicine stock updated: {prescription.medicine.name}, Old: {old_stock}, New: {prescription.medicine.stock}")
             
-            # 10. تغییر وضعیت نسخه
             prescription.status = 'filled'
             prescription.save()
-            print(f"📄 DEBUG: Prescription status updated: {prescription.prescription_id} -> {prescription.status}")
+            print(f" DEBUG: Prescription status updated: {prescription.prescription_id} -> {prescription.status}")
             
-            # 11. تایید نهایی
-            print(f"🎉 DEBUG: ORDER COMPLETED SUCCESSFULLY!")
-            print(f"🎉 DEBUG: Order ID: {order.order_id}")
-            print(f"🎉 DEBUG: Patient: {request.user.username}")
-            print(f"🎉 DEBUG: Medicine: {prescription.medicine.name}")
-            print(f"🎉 DEBUG: Total: ${total_amount}")
+            print(f" DEBUG: ORDER COMPLETED SUCCESSFULLY!")
+            print(f" DEBUG: Order ID: {order.order_id}")
+            print(f" DEBUG: Patient: {request.user.username}")
+            print(f" DEBUG: Medicine: {prescription.medicine.name}")
+            print(f" DEBUG: Total: ${total_amount}")
         
-        # بارگذاری مجدد
         order.refresh_from_db()
         prescription.refresh_from_db()
         
@@ -912,19 +875,18 @@ def create_order_api(request):
         }, status=201)
         
     except Prescription.DoesNotExist:
-        print(f"❌ DEBUG: Prescription {prescription_id} not found for patient {prof.national_id}")
+        print(f" DEBUG: Prescription {prescription_id} not found for patient {prof.national_id}")
         return JsonResponse({"error": "Prescription not found or not accessible"}, status=404)
     except Exception as e:
         import traceback
-        print(f"❌ DEBUG: Error creating order: {str(e)}")
-        print("❌ DEBUG: Traceback:")
+        print(f" DEBUG: Error creating order: {str(e)}")
+        print(" DEBUG: Traceback:")
         print(traceback.format_exc())
         return JsonResponse({"error": f"Failed to create order: {str(e)}"}, status=400)
     
 @require_http_methods(["GET"])
 @login_required
 def patient_stats_api(request):
-    """دریافت آمار بیمار"""
     prof = getattr(request.user, "profile", None)
     
     if not prof or prof.role != 'patient':
@@ -973,26 +935,20 @@ def patient_stats_api(request):
         return JsonResponse({"error": str(e)}, status=400)
     
     
-# در api_views.py اضافه کنید
 @require_http_methods(["GET"])
 def debug_simple_orders(request):
-    """ساده‌ترین تست برای orders"""
     print("=" * 50)
-    print("🔍 DEBUG SIMPLE ORDERS API CALLED")
+    print(" DEBUG SIMPLE ORDERS API CALLED")
     
-    # 1. بررسی authentication
-    print(f"🔍 User: {request.user}, Authenticated: {request.user.is_authenticated}")
-    print(f"🔍 User ID: {request.user.id if request.user.is_authenticated else 'Not authenticated'}")
+    print(f" User: {request.user}, Authenticated: {request.user.is_authenticated}")
+    print(f" User ID: {request.user.id if request.user.is_authenticated else 'Not authenticated'}")
     
-    # 2. مستقیماً از دیتابیس بخوانیم
     from django.db import connection
     with connection.cursor() as cursor:
-        # تمام orders
         cursor.execute("SELECT COUNT(*) FROM core_order")
         total_orders = cursor.fetchone()[0]
-        print(f"🔍 Total orders in database: {total_orders}")
+        print(f" Total orders in database: {total_orders}")
         
-        # تمام orders با جزئیات
         cursor.execute("""
             SELECT o.id, o.order_id, o.patient_id, o.total_amount, o.status, 
                    u.username as patient_name
@@ -1006,11 +962,9 @@ def debug_simple_orders(request):
         for order in all_orders:
             print(f"  - ID: {order[0]}, OrderID: {order[1]}, PatientID: {order[2]}, Patient: {order[5]}, Total: {order[3]}, Status: {order[4]}")
     
-    # 3. با ORM بگیریم
     from .models import Order
     orders = Order.objects.all()
     
-    # 4. ایجاد response
     response_data = []
     for order in orders:
         item = {
@@ -1024,7 +978,7 @@ def debug_simple_orders(request):
         }
         response_data.append(item)
     
-    print(f"🔍 Returning {len(response_data)} orders")
+    print(f"DEBUG: Returning {len(response_data)} orders")
     print("=" * 50)
     
     return JsonResponse({

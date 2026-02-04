@@ -48,12 +48,11 @@ function getCsrfToken() {
 }
 
 async function loadPatientPrescriptions() {
-    console.log("📋 Loading patient prescriptions...");
+    console.log(" Loading patient prescriptions...");
     
     const container = $('prescription-history-list');
     if (!container) return;
     
-    // Show loading state
     container.innerHTML = `
         <div style="text-align: center; padding: 30px; color: #6b7280;">
             <div class="loading-spinner"></div>
@@ -69,7 +68,7 @@ async function loadPatientPrescriptions() {
         }
         
         const prescriptions = data;
-        console.log(`✅ Loaded ${prescriptions.length} prescriptions`);
+        console.log(` Loaded ${prescriptions.length} prescriptions`);
         
         if (prescriptions.length === 0) {
             container.innerHTML = `
@@ -84,7 +83,6 @@ async function loadPatientPrescriptions() {
             return;
         }
         
-        // Display prescriptions
         container.innerHTML = prescriptions.map(prescription => `
             <div class="prescription-card" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
@@ -134,14 +132,14 @@ async function loadPatientPrescriptions() {
                         Created: ${new Date(prescription.created_at).toLocaleDateString()}
                     </div>
                     <button class="btn btn-primary" onclick="createOrder('${prescription.prescription_id}')">
-                        📦 Place Order
+                         Place Order
                     </button>
                 </div>
             </div>
         `).join('');
         
     } catch (error) {
-        console.error('❌ Error loading prescriptions:', error);
+        console.error(' Error loading prescriptions:', error);
         container.innerHTML = `
             <div style="text-align: center; padding: 30px; color: #dc2626; background: #fef2f2; border-radius: 8px;">
                 <svg style="width: 48px; height: 48px; margin-bottom: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,7 +157,7 @@ async function loadPatientPrescriptions() {
 
 async function createOrder(prescriptionId, prescriptionData) {
     if (!prescriptionId) {
-        alert('❌ Invalid prescription ID');
+        alert(' Invalid prescription ID');
         return;
     }
     
@@ -199,33 +197,33 @@ async function createOrder(prescriptionId, prescriptionData) {
             throw new Error(data?.error || data?.detail || `Failed to create order (${status})`);
         }
         
-        alert(`✅ ORDER & PAYMENT SUCCESSFUL!\n\n` +
-              `📦 Order Details:\n` +
+        alert(` ORDER & PAYMENT SUCCESSFUL!\n\n` +
+              ` Order Details:\n` +
               `• Order ID: ${data.order_id}\n` +
               `• Prescription ID: ${data.prescription_id}\n` +
               `• Total Paid: $${data.total_amount?.toFixed(2) || '0.00'}\n` +
               `• New Wallet Balance: $${data.wallet_balance?.toFixed(2) || '0.00'}\n` +
               `• Status: ${data.status || 'completed'}\n\n` +
-              `✅ Payment processed successfully!`);
+              ` Payment processed successfully!`);
         
         await refreshAllData();
         
-        console.log('✅ Order created, payment processed, and lists refreshed');
+        console.log(' Order created, payment processed, and lists refreshed');
         
     } catch (error) {
-        console.error('❌ Error creating order:', error);
+        console.error(' Error creating order:', error);
         
         let errorMessage = error.message;
         
         if (error.message.includes('stock')) {
-            errorMessage = '❌ INSUFFICIENT STOCK\n\nThe medicine is currently out of stock.';
+            errorMessage = ' INSUFFICIENT STOCK\n\nThe medicine is currently out of stock.';
         } else if (error.message.includes('INSUFFICIENT BALANCE')) {
             errorMessage = error.message;
         } else if (error.message.includes('not found')) {
-            errorMessage = '❌ PRESCRIPTION NOT FOUND\n\nThis prescription may have already been used or does not exist.';
+            errorMessage = ' PRESCRIPTION NOT FOUND\n\nThis prescription may have already been used or does not exist.';
         }
         
-        alert(`❌ ORDER FAILED\n\n${errorMessage}`);
+        alert(` ORDER FAILED\n\n${errorMessage}`);
     } finally {
         if (button) {
             button.disabled = false;
@@ -236,7 +234,7 @@ async function createOrder(prescriptionId, prescriptionData) {
 
 
 async function refreshAllData() {
-    console.log('🔄 Refreshing all data...');
+    console.log(' Refreshing all data...');
     
     try {
         await Promise.all([
@@ -246,14 +244,14 @@ async function refreshAllData() {
             loadWalletHistory()
         ]);
         
-        console.log('✅ All data refreshed successfully');
+        console.log(' All data refreshed successfully');
     } catch (error) {
-        console.error('❌ Error refreshing data:', error);
+        console.error(' Error refreshing data:', error);
     }
 }
 
 async function loadOrderHistory() {
-    console.log("📦 Loading order history from specialized API...");
+    console.log(" Loading order history from specialized API...");
     
     const container = $('order-history-list');
     if (!container) return;
@@ -266,12 +264,10 @@ async function loadOrderHistory() {
             </div>
         `;
         
-        // از API مخصوص Order History استفاده کن
         const { ok, data } = await apiRequest('/api/patient/order-history/');
         
         if (!ok) {
-            // اگر API مخصوص کار نکرد، از API عمومی استفاده کن
-            console.log("⚠️ Specialized API failed, using general API");
+            console.log(" Specialized API failed, using general API");
             return loadOrderHistoryFromGeneralAPI();
         }
         
@@ -285,7 +281,7 @@ async function loadOrderHistory() {
         displayOrderHistory(orders, container);
         
     } catch (error) {
-        console.error('❌ Error:', error);
+        console.error(' Error:', error);
         container.innerHTML = `
             <div style="text-align: center; padding: 20px; color: #dc2626;">
                 Error: ${error.message}
@@ -294,7 +290,6 @@ async function loadOrderHistory() {
     }
 }
 
-// تابع پشتیبان اگر API مخصوص کار نکرد
 async function loadOrderHistoryFromGeneralAPI() {
     const container = $('order-history-list');
     const { ok, data } = await apiRequest('/api/orders/');
@@ -304,7 +299,6 @@ async function loadOrderHistoryFromGeneralAPI() {
         return;
     }
     
-    // فقط سفارش‌های completed را فیلتر کن
     const completedOrders = data.filter(order => order.status === 'completed');
     
     if (completedOrders.length === 0) {
@@ -315,7 +309,6 @@ async function loadOrderHistoryFromGeneralAPI() {
     displayOrderHistory(completedOrders, container);
 }
 
-// تابع برای نمایش پیام عدم وجود سفارش
 function showNoOrdersMessage(container) {
     if (!container) return;
     
@@ -341,7 +334,6 @@ function showNoOrdersMessage(container) {
     `;
 }
 
-// تابع اصلی برای نمایش تاریخچه سفارش‌ها
 function displayOrderHistory(orders, container) {
     container.innerHTML = orders.map(order => {
         const prescription = order.prescription || {};
@@ -359,13 +351,13 @@ function displayOrderHistory(orders, container) {
                         </h3>
                         <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                             <span style="font-size: 0.9rem; color: #6b7280;">
-                                📅 ${orderDate.toLocaleDateString()}
+                                 ${orderDate.toLocaleDateString()}
                             </span>
                             <span style="font-size: 0.9rem; color: #6b7280;">
-                                🕒 ${orderDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                 ${orderDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                             </span>
                             <span style="font-size: 0.9rem; color: #059669; font-weight: 600;">
-                                💰 $${order.total_amount.toFixed(2)}
+                                 $${order.total_amount.toFixed(2)}
                             </span>
                         </div>
                     </div>
@@ -377,7 +369,7 @@ function displayOrderHistory(orders, container) {
                 <!-- بخش نسخه -->
                 <div style="margin-bottom: 20px;">
                     <h4 style="margin: 0 0 16px 0; color: #374151; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #3b82f6;">💊</span> Prescription Information
+                        <span style="color: #3b82f6;"></span> Prescription Information
                     </h4>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
@@ -498,7 +490,7 @@ function displayOrderHistory(orders, container) {
         `;
     }).join('');
     
-    console.log(`✅ Displayed ${orders.length} completed orders in history`);
+    console.log(` Displayed ${orders.length} completed orders in history`);
 }
 
 async function searchPrescription(event) {
@@ -508,7 +500,7 @@ async function searchPrescription(event) {
     const prescriptionId = input?.value.trim();
     
     if (!prescriptionId) {
-        alert('❌ Please enter a prescription ID');
+        alert(' Please enter a prescription ID');
         return;
     }
     
@@ -517,7 +509,7 @@ async function searchPrescription(event) {
         alert(`Searching for prescription: ${prescriptionId}\n\nThis feature will be implemented soon.`);
         
     } catch (error) {
-        console.error('❌ Error searching prescription:', error);
+        console.error(' Error searching prescription:', error);
         alert(`Error: ${error.message}`);
     }
 }
@@ -568,7 +560,7 @@ async function depositToWallet() {
     const amount = prompt('Enter amount to deposit ($):');
     
     if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-        alert('❌ Please enter a valid positive amount');
+        alert(' Please enter a valid positive amount');
         return;
     }
     
@@ -584,13 +576,13 @@ async function depositToWallet() {
             throw new Error(data?.error || `Deposit failed (${status})`);
         }
         
-        alert(`✅ ${data.message}\nNew balance: $${data.new_balance?.toFixed(2) || '0.00'}`);
+        alert(` ${data.message}\nNew balance: $${data.new_balance?.toFixed(2) || '0.00'}`);
         
         await loadWalletBalance();
         
     } catch (error) {
-        console.error('❌ Error depositing to wallet:', error);
-        alert(`❌ Deposit failed: ${error.message}`);
+        console.error(' Error depositing to wallet:', error);
+        alert(` Deposit failed: ${error.message}`);
     }
 }
 
@@ -727,7 +719,7 @@ async function loadWalletHistory() {
         `).join('');
         
     } catch (error) {
-        console.error('❌ Error loading wallet history:', error);
+        console.error(' Error loading wallet history:', error);
         previewContainer.innerHTML = `
             <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 0.9rem;">
                 Wallet history will appear here
@@ -764,10 +756,10 @@ async function loadPatientStats() {
                 $('total-spent-amount').textContent = `$${data.total_spent?.toFixed(2) || '0.00'}`;
             }
             
-            console.log('✅ Patient stats loaded:', data);
+            console.log(' Patient stats loaded:', data);
         }
     } catch (error) {
-        console.error('❌ Error loading patient stats:', error);
+        console.error(' Error loading patient stats:', error);
     }
 }
 
@@ -833,7 +825,7 @@ async function processPayment() {
             throw new Error(data?.error || `Deposit failed (${status})`);
         }
         
-        alert(`✅ ${data.message || 'Payment successful!'}\nNew Balance: $${data.new_balance?.toFixed(2) || selectedAmount.toFixed(2)}`);
+        alert(` ${data.message || 'Payment successful!'}\nNew Balance: $${data.new_balance?.toFixed(2) || selectedAmount.toFixed(2)}`);
         
         await loadWalletBalance();
         closeWalletModal();
@@ -841,8 +833,8 @@ async function processPayment() {
         await loadWalletHistory();
         
     } catch (error) {
-        console.error('❌ Payment error:', error);
-        alert(`❌ Payment failed: ${error.message}`);
+        console.error(' Payment error:', error);
+        alert(` Payment failed: ${error.message}`);
     }
 }
 
@@ -855,13 +847,13 @@ function addFunds(amount) {
             if (ok) {
                 loadWalletBalance();
                 loadWalletHistory();
-                alert(`✅ $${amount.toFixed(2)} added successfully!`);
+                alert(` $${amount.toFixed(2)} added successfully!`);
             } else {
-                alert(`❌ Failed: ${data?.error || 'Unknown error'}`);
+                alert(` Failed: ${data?.error || 'Unknown error'}`);
             }
         }).catch(error => {
             console.error('Error:', error);
-            alert('❌ Network error');
+            alert(' Network error');
         });
     }
 }
@@ -957,7 +949,7 @@ async function loadFullWalletHistory() {
         `).join('');
         
     } catch (error) {
-        console.error('❌ Error loading full wallet history:', error);
+        console.error(' Error loading full wallet history:', error);
         container.innerHTML = `
             <div style="text-align: center; padding: 40px; color: #dc2626;">
                 Error loading transaction history: ${error.message}
@@ -966,7 +958,6 @@ async function loadFullWalletHistory() {
     }
 }
 
-// ==================== سایر توابع ====================
 
 function showPaymentMethods() {
     alert(' Payment Methods\n\nThis feature will be implemented soon.');
@@ -1003,7 +994,7 @@ async function depositToWallet() {
     const amount = parseFloat(amountInput);
     
     if (isNaN(amount) || amount <= 0) {
-        alert('❌ Please enter a valid positive amount');
+        alert(' Please enter a valid positive amount');
         return;
     }
     
@@ -1017,21 +1008,19 @@ async function depositToWallet() {
             throw new Error(data?.error || `Deposit failed (${status})`);
         }
         
-        alert(`✅ ${data.message || 'Deposit successful!'}\nNew balance: $${data.new_balance?.toFixed(2) || '0.00'}`);
+        alert(` ${data.message || 'Deposit successful!'}\nNew balance: $${data.new_balance?.toFixed(2) || '0.00'}`);
         
-        // Refresh wallet balance and history
         await Promise.all([
             loadWalletBalance(),
             loadWalletHistory()
         ]);
         
     } catch (error) {
-        console.error('❌ Error depositing to wallet:', error);
-        alert(`❌ Deposit failed: ${error.message}`);
+        console.error(' Error depositing to wallet:', error);
+        alert(` Deposit failed: ${error.message}`);
     }
 }
 
-// Export functions for global access
 window.loadPatientPrescriptions = loadPatientPrescriptions;
 window.loadOrderHistory = loadOrderHistory;
 window.createOrder = createOrder;
@@ -1048,4 +1037,4 @@ window.showPaymentMethods = showPaymentMethods;
 window.showReceipts = showReceipts;
 window.showSupport = showSupport;
 
-console.log('✅ Patient JavaScript module loaded');
+console.log('Patient JavaScript module loaded');
