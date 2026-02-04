@@ -1,6 +1,3 @@
-# SELab-Pharmacy
-Software engineering Lab
-
 # PharmaCare - Pharmacy Management System
 
 A comprehensive Django-based pharmacy management system designed for academic projects, featuring role-based dashboards, prescription management, inventory control, and secure electronic payments.
