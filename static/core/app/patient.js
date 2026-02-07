@@ -323,9 +323,6 @@ function showNoOrdersMessage(container) {
                 it will appear here with all prescription details.
             </p>
             <div style="display: inline-flex; gap: 10px;">
-                <button onclick="loadPatientPrescriptions()" class="btn btn-primary">
-                    View Active Prescriptions
-                </button>
                 <button onclick="loadOrderHistory()" class="btn btn-outline">
                     Refresh
                 </button>
@@ -838,25 +835,25 @@ async function processPayment() {
     }
 }
 
-function addFunds(amount) {
-    if (confirm(`Add $${amount.toFixed(2)} to your wallet?`)) {
-        apiRequest('/api/wallet/deposit/', {
-            method: 'POST',
-            body: JSON.stringify({ amount: amount })
-        }).then(({ ok, status, data }) => {
-            if (ok) {
-                loadWalletBalance();
-                loadWalletHistory();
-                alert(` $${amount.toFixed(2)} added successfully!`);
-            } else {
-                alert(` Failed: ${data?.error || 'Unknown error'}`);
-            }
-        }).catch(error => {
-            console.error('Error:', error);
-            alert(' Network error');
-        });
-    }
-}
+// function addFunds(amount) {
+//     if (confirm(`Add $${amount.toFixed(2)} to your wallet?`)) {
+//         apiRequest('/api/wallet/deposit/', {
+//             method: 'POST',
+//             body: JSON.stringify({ amount: amount })
+//         }).then(({ ok, status, data }) => {
+//             if (ok) {
+//                 loadWalletBalance();
+//                 loadWalletHistory();
+//                 alert(` $${amount.toFixed(2)} added successfully!`);
+//             } else {
+//                 alert(` Failed: ${data?.error || 'Unknown error'}`);
+//             }
+//         }).catch(error => {
+//             console.error('Error:', error);
+//             alert(' Network error');
+//         });
+//     }
+// }
 
 buttons.forEach(button => {
     button.addEventListener('click', function(event) {
