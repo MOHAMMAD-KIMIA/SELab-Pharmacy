@@ -204,7 +204,7 @@ const Pharmacist = {
     },
 
     init() {
-        console.log("💊 Initializing Pharmacist Dashboard...");
+        console.log(" Initializing Pharmacist Dashboard...");
 
         const form = Utils.$("medicine-form");
         if (form && !form.dataset.bound) {
