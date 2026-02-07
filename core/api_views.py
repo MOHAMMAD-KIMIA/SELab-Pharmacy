@@ -12,6 +12,7 @@ from django.views.decorators.http import require_http_methods
 
 from .models import Order, Profile, Medicine, Prescription, OrderItem, Wallet, Transaction 
 
+# parsing js to py
 def _json(request):
     try:
         raw = (request.body or b"").decode("utf-8")
@@ -20,6 +21,7 @@ def _json(request):
         return json.loads(raw)
     except Exception:
         return None
+
 
 def _parse_date(v):
     if v is None:
@@ -248,7 +250,6 @@ def medicine_detail_api(request, pk):
     except Medicine.DoesNotExist:
         return JsonResponse({"error": "Medicine not found"}, status=404)
 
-    # فقط داروسازان می‌توانند داروها را ویرایش/حذف کنند
     prof = getattr(request.user, "profile", None)
     role = getattr(prof, "role", "patient") if prof else "patient"
     if role not in ["pharmacist", "admin"]:
@@ -368,7 +369,6 @@ def prescriptions_api(request):
 @require_http_methods(["GET"])
 @login_required
 def orders_api(request):
-    """Orders API با اطلاعات کامل نسخه"""
     print(f" ORDERS API with full prescription info")
     
     try:
@@ -441,7 +441,6 @@ def orders_api(request):
 @require_http_methods(["GET"])
 @login_required
 def patient_order_history_api(request):
-    """API مخصوص Order History بیمار با اطلاعات کامل"""
     print(f" PATIENT ORDER HISTORY API for {request.user.username}")
     
     try:
@@ -500,7 +499,6 @@ def patient_order_history_api(request):
 @require_http_methods(["GET"])
 @login_required
 def pharmacist_all_orders_api(request):
-    """API برای داروساز - همیشه همه سفارش‌ها را برمی‌گرداند"""
     print("=" * 60)
     print(" PHARMACIST ALL ORDERS API CALLED")
     print(f" User: {request.user.username} (ID: {request.user.id})")
@@ -958,7 +956,7 @@ def debug_simple_orders(request):
         """)
         all_orders = cursor.fetchall()
         
-        print("🔍 All orders in database:")
+        print("All orders in database:")
         for order in all_orders:
             print(f"  - ID: {order[0]}, OrderID: {order[1]}, PatientID: {order[2]}, Patient: {order[5]}, Total: {order[3]}, Status: {order[4]}")
     

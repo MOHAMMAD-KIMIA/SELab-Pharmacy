@@ -21,7 +21,7 @@ async function apiRequest(url, options = {}) {
     }
     
     const finalOptions = { ...defaultOptions, ...options };
-    
+      
     console.log(`API Request: ${options.method || 'GET'} ${url}`, finalOptions);
     
     try {
