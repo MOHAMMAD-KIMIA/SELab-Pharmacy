@@ -1,31 +1,24 @@
-// static/core/app/utils.js
 "use strict";
 
-// توابع کمکی عمومی
 const Utils = {
-    // انتخاب المنت با ID
     $(id) {
         return document.getElementById(id);
     },
 
-    // انتخاب المنت با selector
     $$(selector) {
         return document.querySelector(selector);
     },
 
-    // انتخاب همه المنت‌ها با selector
     $$$(selector) {
         return document.querySelectorAll(selector);
     },
 
-    // دریافت CSRF token
     getCsrfToken() {
         const cookieToken = this.getCookie("csrftoken");
         const domToken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value;
         return cookieToken || domToken;
     },
 
-    // دریافت cookie
     getCookie(name) {
         const value = `; ${document.cookie || ""}`;
         const parts = value.split(`; ${name}=`);
@@ -33,7 +26,6 @@ const Utils = {
         return null;
     },
 
-    // پردازش response JSON
     async safeJson(res) {
         const ct = (res.headers.get("content-type") || "").toLowerCase();
         const txt = await res.text();
@@ -52,7 +44,6 @@ const Utils = {
         }
     },
 
-    // درخواست API
     async apiRequest(url, { method = "GET", body = null, headers = {} } = {}) {
         const opts = {
             method,
@@ -79,18 +70,15 @@ const Utils = {
         return { ok: res.ok, status: res.status, data };
     },
 
-    // نمایش خطا
     showError(prefix, status, data) {
         const msg = data?.error || data?.detail || data?.raw || `${prefix} (${status})`;
         alert(msg);
     },
 
-    // redirect
     go(url) {
         window.location.assign(url);
     },
 
-    // normalize لیست داده‌ها
     normalizeList(data) {
         if (!data) return [];
         if (Array.isArray(data)) return data;
@@ -99,7 +87,6 @@ const Utils = {
         return [];
     },
 
-    // نمایش پیام
     showMessage(elementId, text, type = "info") {
         const element = this.$(elementId);
         if (!element) return;
@@ -122,13 +109,11 @@ const Utils = {
         element.style.padding = "1rem";
         element.style.marginTop = "1rem";
 
-        // حذف خودکار بعد از 5 ثانیه
         setTimeout(() => {
             element.style.display = "none";
         }, 5000);
     }
 };
 
-// Export برای استفاده در ماژول‌های دیگر
 window.Utils = Utils;
 console.log("✅ Utils module loaded");

@@ -594,7 +594,7 @@ document.addEventListener('DOMContentLoaded', function() {
         $('prescription-history-list') || 
         $('order-history-list')) {
         
-        console.log('👤 Patient dashboard detected');
+        console.log(' Patient dashboard detected');
         initPatientDashboard();
     }
 });
